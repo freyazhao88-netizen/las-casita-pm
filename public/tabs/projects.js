@@ -111,7 +111,9 @@ window.ProjectsTab = (function () {
         tile("Total spend", A.fmtMoney(s.grandTotal)) +
         tile("Quoted total", A.fmtMoney(s.quotedTotal)) +
         (s.approvedChangeOrdersTotal > 0.005 ? tile("+ Approved change orders", A.fmtMoney(s.approvedChangeOrdersTotal)) : "") +
-        tile("Vs. contract", (s.variance >= 0 ? "+" : "") + A.fmtMoney(s.variance)) +
+        tile("Profit margin", (s.profitMargin >= 0 ? "+" : "") + A.fmtMoney(s.profitMargin)) +
+        tile("Received from client", A.fmtMoney(s.amountReceived)) +
+        tile("Outstanding balance", A.fmtMoney(s.outstandingBalance)) +
         tile("Stage progress", s.stageProgress.passed + " / " + s.stageProgress.total) +
       '</div>' +
 
