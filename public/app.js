@@ -92,6 +92,8 @@ window.App = (function () {
     populateSelect(document.getElementById("matProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
     populateSelect(document.getElementById("stgProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
     populateSelect(document.getElementById("coProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
+    populateSelect(document.getElementById("payProject"), active, (p) => p.id, (p) => p.name);
+    populateSelect(document.getElementById("payProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
   }
 
   function projectName(id) {
@@ -117,6 +119,7 @@ window.App = (function () {
     if (window.EmployeesTab && name === "employees") window.EmployeesTab.render();
     if (window.StagesTab && name === "stages") window.StagesTab.render();
     if (window.ChangeOrdersTab && name === "changeorders") window.ChangeOrdersTab.render();
+    if (window.PaymentsTab && name === "payments") window.PaymentsTab.render();
     if (window.QuotesTab && name === "quotes") window.QuotesTab.render();
     try { localStorage.setItem("lc-active-tab", name); } catch (e) {}
   }
