@@ -19,7 +19,8 @@ const TABLES = {
   attendance: "attendance",
   materials: "materials",
   stages: "stages",
-  quotes: "quotes"
+  quotes: "quotes",
+  changeOrders: "change_orders"
 };
 
 const DEFAULT_STAGE_SUGGESTIONS = [
@@ -92,14 +93,40 @@ async function removeWhere(collection, column, value) {
   check(error);
 }
 
+function hashPassword(password, salt) {
+  salt = salt || crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(String(password), salt, 64).toString("hex");
+  return { salt, hash };
+}
+
+function verifyPassword(password, salt, hash) {
+  if (!salt || !hash) return false;
+  const check = crypto.scryptSync(String(password), salt, 64).toString("hex");
+  return crypto.timingSafeEqual(Buffer.from(check, "hex"), Buffer.from(hash, "hex"));
+}
+
 let settingsCache = null;
 
 async function getSettings() {
   if (settingsCache) return settingsCache;
   const { data, error } = await supabase.from("settings").select("*").eq("id", 1).maybeSingle();
   check(error);
-  if (data) { settingsCache = toCamelObj(data); return settingsCache; }
 
+  if (data) {
+    // Backfill a password if this settings row predates the simple-password login.
+    if (!data.password_salt || !data.password_hash) {
+      const { salt, hash } = hashPassword("Chino@12152");
+      const { data: patched, error: patchError } = await supabase
+        .from("settings").update({ password_salt: salt, password_hash: hash }).eq("id", 1).select().single();
+      check(patchError);
+      settingsCache = toCamelObj(patched);
+      return settingsCache;
+    }
+    settingsCache = toCamelObj(data);
+    return settingsCache;
+  }
+
+  const { salt, hash } = hashPassword("Chino@12152");
   const defaults = {
     id: 1,
     company_name: "Las Casita Inc.",
@@ -107,7 +134,9 @@ async function getSettings() {
     company_addr2: "West Covina, CA 91790",
     company_email: "lascasitainc@gmail.com",
     contact1: "Owen (626) 869-8008",
-    contact2: "LV (626) 566-5266"
+    contact2: "LV (626) 566-5266",
+    password_salt: salt,
+    password_hash: hash
   };
   const { data: inserted, error: insertError } = await supabase.from("settings").insert(defaults).select().single();
   check(insertError);
@@ -125,6 +154,6 @@ async function updateSettings(patch) {
 module.exports = {
   supabase,
   all, find, insert, update, remove, removeWhere,
-  getSettings, updateSettings,
+  hashPassword, verifyPassword, getSettings, updateSettings,
   DEFAULT_STAGE_SUGGESTIONS, CATEGORY_LIBRARY
 };
