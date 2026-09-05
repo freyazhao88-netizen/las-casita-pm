@@ -331,6 +331,10 @@ ol.qs-excl{ margin:0; padding-left:16px; font-size:11.8px; color:var(--muted); l
 ol.qs-excl li{ margin-bottom:2px; }
 .qs-term{ font-size:11.5px; color:var(--muted); line-height:1.6; margin-top:4px; }
 
+.stub-modal{ max-width:760px; padding:0; overflow:visible; background:transparent; box-shadow:none; }
+.stub-modal .modal-head{ background:var(--surface); border-radius:8px 8px 0 0; padding:16px 22px; margin:0; border-bottom:1px solid var(--line); }
+#payStubSheet{ background:var(--surface); border-radius:0 0 8px 8px; padding:32px 34px; max-height:78vh; overflow:auto; }
+
 @media print{
   body{ background:#fff; }
   .sidebar, .mainbar, .quote-editor-topbar, .editor-pane, .canvas-note{ display:none !important; }
@@ -339,4 +343,13 @@ ol.qs-excl li{ margin-bottom:2px; }
   #quote-sheet{ box-shadow:none; border:none; border-radius:0; max-width:none; padding:0; }
   .workspace-1col{ padding:0; max-width:none; }
   .main-col{ display:block; }
+
+  body:has(#payStubModal:not([hidden])) .app-shell,
+  body:has(#payStubModal:not([hidden])) #settingsModal{ display:none !important; }
+  body:has(#payStubModal:not([hidden])) #payStubModal{
+    position:static; background:#fff; display:block; padding:0; inset:auto;
+  }
+  #payStubModal .modal{ box-shadow:none; border:none; max-width:none; width:100%; }
+  #payStubModal #payStubSheet{ box-shadow:none; border-radius:0; max-height:none; overflow:visible; padding:0; }
+  #payStubModal .no-print{ display:none !important; }
 }
