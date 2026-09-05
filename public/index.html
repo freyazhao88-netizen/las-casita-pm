@@ -16,9 +16,8 @@
       <img src="/logo.jpg" alt="Las Casita Construction" class="logo-img logo-img-lg">
     </div>
     <p class="sub">Project Manager</p>
-    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" required>
-    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required>
-    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+    <input type="password" id="loginPassword" placeholder="Access password" autocomplete="current-password" required>
+    <button type="submit" class="btn btn-primary btn-block">Enter</button>
     <p class="login-error" id="loginError" hidden></p>
   </form>
 </div>
@@ -44,9 +43,10 @@
       <button class="nav-item" data-tab="employees" data-title="Employees"><span class="nav-icon">☺</span><span>Employees</span></button>
       <div class="nav-label">Delivery</div>
       <button class="nav-item" data-tab="stages" data-title="Inspections &amp; stage acceptance"><span class="nav-icon">✓</span><span>Inspections</span></button>
+      <button class="nav-item" data-tab="changeorders" data-title="Change orders"><span class="nav-icon">✎</span><span>Change Orders</span></button>
       <button class="nav-item" data-tab="quotes" data-title="Quotes"><span class="nav-icon">▱</span><span>Quotes</span></button>
     </nav>
-    <div class="sidebar-bottom">Las Casita Inc.<br><span class="dim" id="sidebarUserEmail">Project Manager</span></div>
+    <div class="sidebar-bottom">Las Casita Inc.<br><span class="dim">Project Manager</span></div>
   </aside>
 
   <div class="main-col">
@@ -251,6 +251,50 @@
       </div>
     </section>
 
+    <!-- ===================== Change Orders ===================== -->
+    <section class="tab-panel" id="panel-changeorders">
+      <div class="panel-head">
+        <h2>Change orders</h2>
+        <button class="btn btn-primary btn-sm" id="btnNewChangeOrder" type="button">+ New change order</button>
+      </div>
+      <div id="coListView">
+        <div class="head-controls" style="margin-bottom:14px;">
+          <label class="inline-field">Project
+            <select id="coProjectFilter"><option value="">All projects</option></select>
+          </label>
+          <label class="inline-field">Status
+            <select id="coStatusFilter">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </label>
+        </div>
+        <div class="table-wrap"><table class="data-table" id="coTable"><thead><tr>
+          <th>Date</th><th>CO #</th><th>Project</th><th>Title</th><th>Amount</th><th>Status</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+      <div id="coEditorView" hidden>
+        <div class="quote-editor-topbar">
+          <button class="btn btn-sm" id="btnBackToChangeOrders" type="button">← All change orders</button>
+          <div class="live-total">
+            <div class="label">Change order total</div>
+            <div class="amount num" id="coTopbarTotal">$0.00</div>
+          </div>
+          <button class="btn btn-sm" id="btnSaveChangeOrder" type="button">💾 Save</button>
+          <button class="btn btn-primary btn-sm" id="btnPrintChangeOrder" type="button">🖨 Print / Save PDF</button>
+        </div>
+        <div class="workspace">
+          <div class="editor-pane" id="coEditorPane"></div>
+          <div class="preview-pane">
+            <p class="canvas-note">Client-ready preview — updates as you type</p>
+            <div id="co-sheet"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ===================== Quotes ===================== -->
     <section class="tab-panel" id="panel-quotes">
       <div class="panel-head">
@@ -304,10 +348,9 @@
       <div class="field span-2"><button class="btn btn-primary" type="submit">Save settings</button></div>
     </form>
     <hr class="modal-rule">
-    <h3 style="font-size:13px;color:var(--accent);margin:0 0 12px;">Your login password</h3>
     <form id="passwordForm" class="field-grid">
       <div class="field"><label>Current password</label><input type="password" id="pwCurrent" required></div>
-      <div class="field"><label>New password (6+ characters)</label><input type="password" id="pwNew" minlength="6" required></div>
+      <div class="field"><label>New password</label><input type="password" id="pwNew" minlength="4" required></div>
       <div class="field span-2"><button class="btn btn-sm" type="submit">Change password</button><span class="pw-msg" id="pwMsg"></span></div>
     </form>
   </div>
@@ -335,6 +378,7 @@
 <script src="/tabs/materials.js"></script>
 <script src="/tabs/employees.js"></script>
 <script src="/tabs/stages.js"></script>
+<script src="/tabs/changeOrders.js"></script>
 <script src="/tabs/quotes.js"></script>
 <script src="/init.js"></script>
 </body>
