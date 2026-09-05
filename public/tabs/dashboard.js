@@ -95,8 +95,9 @@ window.DashboardTab = (function () {
         '<div class="row"><span class="k">Labor cost</span><span class="v num">' + A.fmtMoney(s.laborTotal) + '</span></div>' +
         '<div class="row"><span class="k">Material cost</span><span class="v num">' + A.fmtMoney(s.materialsTotal) + '</span></div>' +
         '<div class="row"><span class="k">Quoted total</span><span class="v num">' + A.fmtMoney(s.quotedTotal) + '</span></div>' +
+        (s.approvedChangeOrdersTotal > 0.005 ? '<div class="row"><span class="k">+ Approved change orders</span><span class="v num">' + A.fmtMoney(s.approvedChangeOrdersTotal) + '</span></div>' : "") +
         '<div class="row total"><span class="k">Total spend</span><span class="v num">' + A.fmtMoney(s.grandTotal) + '</span></div>' +
-        '<div class="row"><span class="k">Vs. quote</span><span class="v num" style="' + varianceTone + '">' + (s.variance >= 0 ? "+" : "") + A.fmtMoney(s.variance) + '</span></div>' +
+        '<div class="row"><span class="k">Vs. contract</span><span class="v num" style="' + varianceTone + '">' + (s.variance >= 0 ? "+" : "") + A.fmtMoney(s.variance) + '</span></div>' +
         '<div class="progress-bar"><div class="fill" style="width:' + pct + '%"></div></div>' +
         '<div class="row"><span class="k">Stage progress</span><span class="v">' + s.stageProgress.passed + ' / ' + s.stageProgress.total + ' (' + pct + '%)</span></div>' +
       '</div>'
