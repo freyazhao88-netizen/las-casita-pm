@@ -110,7 +110,8 @@ window.ProjectsTab = (function () {
         tile("Material cost", A.fmtMoney(s.materialsTotal)) +
         tile("Total spend", A.fmtMoney(s.grandTotal)) +
         tile("Quoted total", A.fmtMoney(s.quotedTotal)) +
-        tile("Vs. quote", (s.variance >= 0 ? "+" : "") + A.fmtMoney(s.variance)) +
+        (s.approvedChangeOrdersTotal > 0.005 ? tile("+ Approved change orders", A.fmtMoney(s.approvedChangeOrdersTotal)) : "") +
+        tile("Vs. contract", (s.variance >= 0 ? "+" : "") + A.fmtMoney(s.variance)) +
         tile("Stage progress", s.stageProgress.passed + " / " + s.stageProgress.total) +
       '</div>' +
 
