@@ -46,6 +46,14 @@ function withMeta(row) {
   return { ...rest, meta: rowToMeta(row), total: computeTotal(row.items) };
 }
 
+// When a quote is marked "signed" and linked to a project, its total becomes
+// that project's contract amount (quoted_total) — the baseline change orders build on.
+async function syncToProjectIfSigned(row) {
+  if (row.status === "signed" && row.projectId) {
+    await db.update("projects", row.projectId, { quotedTotal: computeTotal(row.items) });
+  }
+}
+
 router.get("/quotes", async (req, res, next) => {
   try {
     const { projectId } = req.query;
@@ -54,7 +62,7 @@ router.get("/quotes", async (req, res, next) => {
     list.sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
     res.json(list.map((q) => ({
       id: q.id, projectId: q.projectId, quoteNo: q.quoteNo, quoteDate: q.quoteDate,
-      address: q.address, scope: q.scope, client: q.clientName,
+      address: q.address, scope: q.scope, client: q.clientName, status: q.status || "draft",
       total: computeTotal(q.items), updatedAt: q.updatedAt
     })));
   } catch (e) { next(e); }
@@ -70,7 +78,7 @@ router.get("/quotes/:id", async (req, res, next) => {
 
 router.post("/quotes", async (req, res, next) => {
   try {
-    const { projectId, meta, items, paymentSchedule, exclusions } = req.body || {};
+    const { projectId, meta, items, paymentSchedule, exclusions, status } = req.body || {};
     if (projectId && !(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
     const now = new Date().toISOString();
     const rec = await db.insert("quotes", {
@@ -79,9 +87,11 @@ router.post("/quotes", async (req, res, next) => {
       items: items || [],
       paymentSchedule: paymentSchedule || [],
       exclusions: exclusions || [],
+      status: status || "draft",
       createdAt: now,
       updatedAt: now
     });
+    await syncToProjectIfSigned(rec);
     res.status(201).json(withMeta(rec));
   } catch (e) { next(e); }
 });
@@ -92,11 +102,12 @@ router.put("/quotes/:id", async (req, res, next) => {
     if (!rec) return res.status(404).json({ error: "Not found" });
     const patch = { updatedAt: new Date().toISOString() };
     if (req.body.meta) Object.assign(patch, metaToRow(req.body.meta));
-    ["items", "paymentSchedule", "exclusions"].forEach((k) => {
+    ["items", "paymentSchedule", "exclusions", "status"].forEach((k) => {
       if (k in req.body) patch[k] = req.body[k];
     });
     if ("projectId" in req.body) patch.projectId = req.body.projectId ? Number(req.body.projectId) : null;
     const updated = await db.update("quotes", req.params.id, patch);
+    await syncToProjectIfSigned(updated);
     res.json(withMeta(updated));
   } catch (e) { next(e); }
 });
@@ -112,6 +123,7 @@ router.post("/quotes/:id/duplicate", async (req, res, next) => {
       items: JSON.parse(JSON.stringify(src.items)),
       paymentSchedule: JSON.parse(JSON.stringify(src.paymentSchedule)),
       exclusions: JSON.parse(JSON.stringify(src.exclusions)),
+      status: "draft",
       createdAt: now,
       updatedAt: now
     });
