@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Las Casita — Project Manager</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- ---------------- Login screen ---------------- -->
+<div id="loginScreen" class="login-screen">
+  <form id="loginForm" class="login-card">
+    <div class="logo-plate logo-plate-lg">
+      <img src="/logo.jpg" alt="Las Casita Construction" class="logo-img logo-img-lg">
+    </div>
+    <p class="sub">Project Manager</p>
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" required>
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required>
+    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+    <p class="login-error" id="loginError" hidden></p>
+  </form>
+</div>
+
+<!-- ---------------- App shell ---------------- -->
+<div id="app" class="app-shell" hidden>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-plate logo-plate-sm">
+        <img src="/logo.jpg" alt="Las Casita Construction" class="logo-img logo-img-sm">
+      </div>
+      <div class="brand-text">
+        <p>Project Manager</p>
+      </div>
+    </div>
+    <nav class="side-nav" id="tabnav">
+      <div class="nav-label">Workspace</div>
+      <button class="nav-item" data-tab="dashboard" data-title="Dashboard"><span class="nav-icon">⌂</span><span>Dashboard</span></button>
+      <button class="nav-item" data-tab="projects" data-title="Projects"><span class="nav-icon">▣</span><span>Projects</span></button>
+      <div class="nav-label">Cost &amp; crew</div>
+      <button class="nav-item" data-tab="attendance" data-title="Attendance &amp; payroll"><span class="nav-icon">◷</span><span>Attendance</span></button>
+      <button class="nav-item" data-tab="materials" data-title="Material purchases"><span class="nav-icon">▤</span><span>Materials</span></button>
+      <button class="nav-item" data-tab="employees" data-title="Employees"><span class="nav-icon">☺</span><span>Employees</span></button>
+      <div class="nav-label">Delivery</div>
+      <button class="nav-item" data-tab="stages" data-title="Inspections &amp; stage acceptance"><span class="nav-icon">✓</span><span>Inspections</span></button>
+      <button class="nav-item" data-tab="quotes" data-title="Quotes"><span class="nav-icon">▱</span><span>Quotes</span></button>
+    </nav>
+    <div class="sidebar-bottom">Las Casita Inc.<br><span class="dim" id="sidebarUserEmail">Project Manager</span></div>
+  </aside>
+
+  <div class="main-col">
+    <div class="mainbar">
+      <div class="crumb" id="pageTitle">Dashboard</div>
+      <div class="mainbar-right">
+        <button class="btn btn-sm" id="btnSettings" type="button">⚙ Settings</button>
+        <button class="btn btn-sm" id="btnLogout" type="button">Log out</button>
+      </div>
+    </div>
+
+  <main class="workspace-1col" id="mainContent">
+
+    <!-- ===================== Dashboard ===================== -->
+    <section class="tab-panel" id="panel-dashboard">
+      <div class="panel-head">
+        <h2>Portfolio overview</h2>
+        <p class="hint">Total labor + material cost per project, quote comparison, and stage progress.</p>
+      </div>
+      <div class="stat-row" id="dashStats"></div>
+      <div class="two-col">
+        <div>
+          <div class="card-head" style="margin-bottom:12px;"><h3>Project progress</h3></div>
+          <div id="dashProjectCards" class="card-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Upcoming inspections</h3></div>
+          <div id="dashRecentStages"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Projects ===================== -->
+    <section class="tab-panel" id="panel-projects">
+      <div class="panel-head">
+        <h2>Projects</h2>
+        <button class="btn btn-primary btn-sm" id="btnNewProject" type="button">+ New project</button>
+      </div>
+      <div class="head-controls" style="margin-bottom:14px;">
+        <label class="inline-field">Status
+          <select id="projStatusFilter">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="on_hold">On hold</option>
+            <option value="completed">Completed</option>
+          </select>
+        </label>
+        <label class="inline-field">Client
+          <input type="text" id="projClientFilter" placeholder="Search client name">
+        </label>
+      </div>
+      <div id="projectsSplit" class="split-view">
+        <div class="split-list" id="projectsList"></div>
+        <div class="split-detail" id="projectDetail">
+          <div class="empty-state">Select a project on the left, or create a new one.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Attendance ===================== -->
+    <section class="tab-panel" id="panel-attendance">
+      <div class="panel-head">
+        <h2>Attendance &amp; payroll</h2>
+        <div class="head-controls">
+          <label class="inline-field">Month
+            <input type="month" id="attMonth">
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Log a work day</h3></div>
+        <form id="attForm" class="field-grid field-grid-5">
+          <div class="field"><label>Date</label><input type="date" id="attDate" required></div>
+          <div class="field"><label>Employee</label><select id="attEmployee" required></select></div>
+          <div class="field"><label>Project</label><select id="attProject" required></select></div>
+          <div class="field"><label>Days</label><input type="number" id="attDays" step="0.25" min="0" value="1" required></div>
+          <div class="field"><label>Day rate ($)</label><input type="number" id="attRate" step="0.01" min="0" required></div>
+          <div class="field span-full"><label>Notes (optional)</label><input type="text" id="attNotes" placeholder="e.g. half day, overtime"></div>
+          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add entry</button></div>
+        </form>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><h3>Entries this month</h3></div>
+          <div class="table-wrap"><table class="data-table" id="attTable"><thead><tr>
+            <th>Date</th><th>Employee</th><th>Project</th><th>Days</th><th>Rate</th><th>Cost</th><th>Paid</th><th></th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Monthly payroll summary</h3></div>
+          <div id="attSummary"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Materials ===================== -->
+    <section class="tab-panel" id="panel-materials">
+      <div class="panel-head">
+        <h2>Material purchases</h2>
+        <div class="head-controls">
+          <label class="inline-field">Project
+            <select id="matProjectFilter"><option value="">All projects</option></select>
+          </label>
+          <label class="inline-field">Project status
+            <select id="matStatusFilter">
+              <option value="">All</option>
+              <option value="active">In progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Log a purchase</h3></div>
+        <form id="matForm" class="field-grid field-grid-5">
+          <div class="field"><label>Date</label><input type="date" id="matDate" required></div>
+          <div class="field"><label>Project</label><select id="matProject" required></select></div>
+          <div class="field"><label>Vendor</label><input type="text" id="matVendor" placeholder="e.g. Home Depot"></div>
+          <div class="field"><label>Category</label><input type="text" id="matCategory" placeholder="e.g. Lumber" list="matCategoryList"><datalist id="matCategoryList"></datalist></div>
+          <div class="field"><label>Pricing mode</label><select id="matMode"><option value="flat">Flat amount</option><option value="qty">Qty × unit price</option></select></div>
+          <div class="field" id="matFlatField"><label>Amount ($)</label><input type="number" id="matAmount" step="0.01" min="0"></div>
+          <div class="field" id="matQtyField" hidden><label>Quantity</label><input type="number" id="matQty" step="0.01" min="0"></div>
+          <div class="field" id="matUnitPriceField" hidden><label>Unit price ($)</label><input type="number" id="matUnitPrice" step="0.01" min="0"></div>
+          <div class="field"><label>Payment status</label><select id="matPaymentStatus"><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div>
+          <div class="field"><label>Payment method</label><input type="text" id="matPaymentMethod" placeholder="e.g. check, card, Zelle"></div>
+          <div class="field"><label>Invoice #</label><input type="text" id="matInvoice" placeholder="optional"></div>
+          <div class="field span-full"><label>Description</label><input type="text" id="matDescription" placeholder="What was purchased"></div>
+          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add purchase</button></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Purchases</h3><span class="hint" id="matTotalHint"></span></div>
+        <div class="table-wrap"><table class="data-table" id="matTable"><thead><tr>
+          <th>Date</th><th>Project</th><th>Vendor</th><th>Category</th><th>Description</th><th>Amount</th><th>Payment</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ===================== Employees ===================== -->
+    <section class="tab-panel" id="panel-employees">
+      <div class="panel-head">
+        <h2>Employees</h2>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Add employee</h3></div>
+        <form id="empForm" class="field-grid field-grid-3">
+          <div class="field"><label>Name</label><input type="text" id="empName" required></div>
+          <div class="field"><label>Default day rate ($)</label><input type="number" id="empRate" step="0.01" min="0" required></div>
+          <div class="field"><label>SSN</label><input type="text" id="empSsn" placeholder="optional"></div>
+          <div class="field"><label>ID number</label><input type="text" id="empIdNumber" placeholder="optional"></div>
+          <div class="field span-2"><label>Notes</label><input type="text" id="empNotes" placeholder="optional"></div>
+          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add employee</button></div>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Roster</h3><span class="hint">SSN / ID are hidden by default — click "show" to reveal</span></div>
+        <div class="table-wrap"><table class="data-table" id="empTable"><thead><tr>
+          <th>Name</th><th>Default day rate</th><th>SSN</th><th>ID number</th><th>Notes</th><th>Active</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ===================== Inspections / stage acceptance ===================== -->
+    <section class="tab-panel" id="panel-stages">
+      <div class="panel-head">
+        <h2>Inspections &amp; stage acceptance</h2>
+        <p class="hint">Every stage across every project — check dates and pass/fail without opening each project.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Add an inspection</h3></div>
+        <form id="stgAddForm" class="field-grid field-grid-3">
+          <div class="field"><label>Project</label><select id="stgAddProject" required></select></div>
+          <div class="field"><label>Inspection / stage name</label><input type="text" id="stgAddName" placeholder="e.g. Rough Electrical" required></div>
+          <div class="field"><label>Department</label><input type="text" id="stgAddDept" placeholder="e.g. City Building Dept"></div>
+          <div class="field span-full">
+            <div class="chip-lib" id="stgSuggestChips"></div>
+          </div>
+          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add inspection</button></div>
+        </form>
+      </div>
+      <div class="card">
+        <div class="head-controls" style="margin-bottom:14px;">
+          <label class="inline-field">Project
+            <select id="stgProjectFilter"><option value="">All projects</option></select>
+          </label>
+          <label class="inline-field">Status
+            <select id="stgStatusFilter">
+              <option value="">All statuses</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="passed">Passed</option>
+              <option value="failed">Failed</option>
+            </select>
+          </label>
+        </div>
+        <div class="table-wrap"><table class="data-table" id="stgTable"><thead><tr>
+          <th>Project</th><th>Inspection</th><th>Department</th><th>Date</th><th>Status</th><th>Notes</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ===================== Quotes ===================== -->
+    <section class="tab-panel" id="panel-quotes">
+      <div class="panel-head">
+        <h2>Quotes</h2>
+        <button class="btn btn-primary btn-sm" id="btnNewQuote" type="button">+ New quote</button>
+      </div>
+      <div id="quotesListView">
+        <div class="table-wrap"><table class="data-table" id="quotesTable"><thead><tr>
+          <th>Date</th><th>Quote #</th><th>Address</th><th>Client</th><th>Project</th><th>Total</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+      <div id="quoteEditorView" hidden>
+        <div class="quote-editor-topbar">
+          <button class="btn btn-sm" id="btnBackToQuotes" type="button">← All quotes</button>
+          <div class="live-total">
+            <div class="label">Quote total</div>
+            <div class="amount num" id="qbTopbarTotal">$0.00</div>
+          </div>
+          <div class="lang-toggle" id="qbLangToggle">
+            <button type="button" class="lang-btn active" data-lang="en">EN</button>
+            <button type="button" class="lang-btn" data-lang="zh">中文</button>
+          </div>
+          <button class="btn btn-sm" id="btnSaveQuote" type="button">💾 Save</button>
+          <button class="btn btn-primary btn-sm" id="btnPrintQuote" type="button">🖨 Print / Save PDF</button>
+        </div>
+        <div class="workspace">
+          <div class="editor-pane" id="qbEditorPane"></div>
+          <div class="preview-pane">
+            <p class="canvas-note">Client-ready preview — updates as you type</p>
+            <div id="quote-sheet"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  </div>
+</div>
+
+<!-- ---------------- Settings modal ---------------- -->
+<div class="modal-overlay" id="settingsModal" hidden>
+  <div class="modal">
+    <div class="modal-head"><h3>Company settings</h3><button class="btn-ghost" id="btnCloseSettings">✕</button></div>
+    <form id="settingsForm" class="field-grid">
+      <div class="field span-2"><label>Company name</label><input type="text" id="setCompanyName"></div>
+      <div class="field"><label>Address line 1</label><input type="text" id="setAddr1"></div>
+      <div class="field"><label>Address line 2</label><input type="text" id="setAddr2"></div>
+      <div class="field"><label>Email</label><input type="text" id="setEmail"></div>
+      <div class="field"><label>Contact 1</label><input type="text" id="setContact1"></div>
+      <div class="field"><label>Contact 2</label><input type="text" id="setContact2"></div>
+      <div class="field span-2"><button class="btn btn-primary" type="submit">Save settings</button></div>
+    </form>
+    <hr class="modal-rule">
+    <h3 style="font-size:13px;color:var(--accent);margin:0 0 12px;">Your login password</h3>
+    <form id="passwordForm" class="field-grid">
+      <div class="field"><label>Current password</label><input type="password" id="pwCurrent" required></div>
+      <div class="field"><label>New password (6+ characters)</label><input type="password" id="pwNew" minlength="6" required></div>
+      <div class="field span-2"><button class="btn btn-sm" type="submit">Change password</button><span class="pw-msg" id="pwMsg"></span></div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="/app.js"></script>
+<script src="/tabs/dashboard.js"></script>
+<script src="/tabs/projects.js"></script>
+<script src="/tabs/attendance.js"></script>
+<script src="/tabs/materials.js"></script>
+<script src="/tabs/employees.js"></script>
+<script src="/tabs/stages.js"></script>
+<script src="/tabs/quotes.js"></script>
+<script src="/init.js"></script>
+</body>
+</html>
