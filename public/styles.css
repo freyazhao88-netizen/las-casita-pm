@@ -292,7 +292,7 @@ hr{ border:none; border-top:1px solid var(--line); }
 
 .preview-pane{ position:sticky; top:84px; max-height:calc(100vh - 100px); overflow:auto; padding:4px; }
 .canvas-note{ text-align:center; font-size:11px; color:var(--muted); margin-bottom:10px; letter-spacing:.03em; text-transform:uppercase; }
-#quote-sheet{ background:var(--surface); border:1px solid var(--line); border-radius:4px; box-shadow:var(--shadow); padding:40px 38px; max-width:680px; margin:0 auto; }
+#quote-sheet, #co-sheet{ background:var(--surface); border:1px solid var(--line); border-radius:4px; box-shadow:var(--shadow); padding:40px 38px; max-width:680px; margin:0 auto; }
 .qs-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:22px; }
 .qs-logo{ display:flex; align-items:center; gap:10px; background:#ffffff; padding:8px 12px; border-radius:6px; }
 .qs-logo-img{ display:block; height:56px; width:auto; }
@@ -340,7 +340,7 @@ ol.qs-excl li{ margin-bottom:2px; }
   .sidebar, .mainbar, .quote-editor-topbar, .editor-pane, .canvas-note{ display:none !important; }
   .workspace{ display:block; }
   .preview-pane{ position:static; max-height:none; overflow:visible; padding:0; }
-  #quote-sheet{ box-shadow:none; border:none; border-radius:0; max-width:none; padding:0; }
+  #quote-sheet, #co-sheet{ box-shadow:none; border:none; border-radius:0; max-width:none; padding:0; }
   .workspace-1col{ padding:0; max-width:none; }
   .main-col{ display:block; }
 
