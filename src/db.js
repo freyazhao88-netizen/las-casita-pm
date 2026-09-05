@@ -20,7 +20,8 @@ const TABLES = {
   materials: "materials",
   stages: "stages",
   quotes: "quotes",
-  changeOrders: "change_orders"
+  changeOrders: "change_orders",
+  payments: "payments"
 };
 
 const DEFAULT_STAGE_SUGGESTIONS = [
