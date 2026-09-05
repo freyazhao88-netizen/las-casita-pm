@@ -44,7 +44,9 @@
       <div class="nav-label">Delivery</div>
       <button class="nav-item" data-tab="stages" data-title="Inspections &amp; stage acceptance"><span class="nav-icon">✓</span><span>Inspections</span></button>
       <button class="nav-item" data-tab="changeorders" data-title="Change orders"><span class="nav-icon">✎</span><span>Change Orders</span></button>
-      <button class="nav-item" data-tab="quotes" data-title="Quotes"><span class="nav-icon">▱</span><span>Quotes</span></button>
+      <button class="nav-item" data-tab="quotes" data-title="Quotes / Contracts"><span class="nav-icon">▱</span><span>Quotes / Contracts</span></button>
+      <div class="nav-label">Billing</div>
+      <button class="nav-item" data-tab="payments" data-title="Payments received"><span class="nav-icon">$</span><span>Payments</span></button>
     </nav>
     <div class="sidebar-bottom">Las Casita Inc.<br><span class="dim">Project Manager</span></div>
   </aside>
@@ -298,12 +300,12 @@
     <!-- ===================== Quotes ===================== -->
     <section class="tab-panel" id="panel-quotes">
       <div class="panel-head">
-        <h2>Quotes</h2>
+        <h2>Quotes / Contracts</h2>
         <button class="btn btn-primary btn-sm" id="btnNewQuote" type="button">+ New quote</button>
       </div>
       <div id="quotesListView">
         <div class="table-wrap"><table class="data-table" id="quotesTable"><thead><tr>
-          <th>Date</th><th>Quote #</th><th>Address</th><th>Client</th><th>Project</th><th>Total</th><th></th>
+          <th>Date</th><th>Quote #</th><th>Address</th><th>Client</th><th>Project</th><th>Total</th><th>Status</th><th></th>
         </tr></thead><tbody></tbody></table></div>
       </div>
       <div id="quoteEditorView" hidden>
@@ -327,6 +329,37 @@
             <div id="quote-sheet"></div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ===================== Payments received ===================== -->
+    <section class="tab-panel" id="panel-payments">
+      <div class="panel-head">
+        <h2>Payments received</h2>
+        <p class="hint">What each client has actually paid, vs. the contract total.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Log a payment</h3></div>
+        <form id="payForm" class="field-grid field-grid-5">
+          <div class="field"><label>Date</label><input type="date" id="payDate" required></div>
+          <div class="field"><label>Project</label><select id="payProject" required></select></div>
+          <div class="field"><label>Amount ($)</label><input type="number" id="payAmount" step="0.01" min="0" required></div>
+          <div class="field"><label>Method</label><input type="text" id="payMethod" placeholder="e.g. check, Zelle, card"></div>
+          <div class="field"><label>Reference #</label><input type="text" id="payReference" placeholder="optional"></div>
+          <div class="field span-full"><label>Notes</label><input type="text" id="payNotes" placeholder="optional"></div>
+          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add payment</button></div>
+        </form>
+      </div>
+      <div class="card">
+        <div class="head-controls" style="margin-bottom:14px;">
+          <label class="inline-field">Project
+            <select id="payProjectFilter"><option value="">All projects</option></select>
+          </label>
+        </div>
+        <div class="card-head"><h3>Payments</h3><span class="hint" id="payTotalHint"></span></div>
+        <div class="table-wrap"><table class="data-table" id="payTable"><thead><tr>
+          <th>Date</th><th>Project</th><th>Amount</th><th>Method</th><th>Reference</th><th>Notes</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
       </div>
     </section>
 
@@ -380,6 +413,7 @@
 <script src="/tabs/stages.js"></script>
 <script src="/tabs/changeOrders.js"></script>
 <script src="/tabs/quotes.js"></script>
+<script src="/tabs/payments.js"></script>
 <script src="/init.js"></script>
 </body>
 </html>
