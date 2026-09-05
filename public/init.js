@@ -9,7 +9,7 @@
 
   async function boot() {
     const session = await checkSession();
-    if (session.loggedIn) { showApp(session.email); }
+    if (session.loggedIn) { showApp(); }
     else { showLogin(); }
   }
 
@@ -18,10 +18,9 @@
     document.getElementById("app").hidden = true;
   }
 
-  async function showApp(email) {
+  async function showApp() {
     document.getElementById("loginScreen").hidden = true;
     document.getElementById("app").hidden = false;
-    if (email) document.getElementById("sidebarUserEmail").textContent = email;
     await A.loadCoreData();
     const savedTab = (function () { try { return localStorage.getItem("lc-active-tab"); } catch (e) { return null; } })();
     A.switchTab(savedTab || "dashboard");
@@ -29,19 +28,18 @@
 
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const email = document.getElementById("loginEmail").value;
     const pw = document.getElementById("loginPassword").value;
     const errEl = document.getElementById("loginError");
     errEl.hidden = true;
     try {
       const res = await fetch("/api/login", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: pw }), credentials: "same-origin"
+        body: JSON.stringify({ password: pw }), credentials: "same-origin"
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error || "Incorrect email or password");
+      if (!res.ok || !data.ok) throw new Error(data.error || "Incorrect password");
       document.getElementById("loginPassword").value = "";
-      showApp(data.email);
+      showApp();
     } catch (err) {
       errEl.textContent = err.message;
       errEl.hidden = false;
