@@ -11,7 +11,7 @@ window.QuotesTab = (function () {
 
   var TXT = {
     en: {
-      quote: "Quote", tag: "Construction", date: "Date:", quoteNo: "Quote #:",
+      quote: "Quote / Contract", tag: "Construction", date: "Date:", quoteNo: "Quote #:",
       address: "Project address", scope: "Scope of work",
       category: "Category", description: "Description", amount: "Amount",
       noItems: "No scope items added yet.", total: "Total",
@@ -26,7 +26,7 @@ window.QuotesTab = (function () {
       terminationText: "Project disputes or any other reason that the owner decides to terminate said contract — the current outstanding balances and materials purchased for the job will need to be paid off to the contractor."
     },
     zh: {
-      quote: "报价单", tag: "建筑工程", date: "日期:", quoteNo: "报价单号:",
+      quote: "报价单 / 合同", tag: "建筑工程", date: "日期:", quoteNo: "报价单号:",
       address: "项目地址", scope: "工程范围",
       category: "项目类别", description: "说明", amount: "金额",
       noItems: "尚未添加报价项目。", total: "总计",
@@ -121,6 +121,7 @@ window.QuotesTab = (function () {
         date: A.todayISO(), quoteNo: "", address: "", scope: "", client: "",
         period: "", startDate: "", estEndDate: "", referralSource: "", language: "en"
       },
+      status: "draft",
       items: [],
       paymentSchedule: defaultPaymentSchedule(),
       exclusions: defaultExclusions()
@@ -168,6 +169,7 @@ window.QuotesTab = (function () {
         '<td>' + A.esc(q.client || "") + '</td>' +
         '<td>' + A.esc(q.projectId ? A.projectName(q.projectId) : "—") + '</td>' +
         '<td class="amt num">' + A.fmtMoney(q.total) + '</td>' +
+        '<td><span class="badge ' + (q.status === "signed" ? "passed" : q.status === "sent" ? "pending" : "") + '">' + (q.status || "draft") + '</span></td>' +
         '<td style="white-space:nowrap;">' +
           '<button class="btn btn-sm" data-open="' + q.id + '">Open</button> ' +
           '<button class="btn btn-sm" data-dup="' + q.id + '">Duplicate</button> ' +
@@ -202,6 +204,7 @@ window.QuotesTab = (function () {
     quote = {
       id: full.id,
       projectId: full.projectId || "",
+      status: full.status || "draft",
       meta: Object.assign(blankQuote().meta, full.meta),
       items: full.items || [],
       paymentSchedule: full.paymentSchedule && full.paymentSchedule.length ? full.paymentSchedule : defaultPaymentSchedule(),
@@ -217,14 +220,14 @@ window.QuotesTab = (function () {
   }
 
   async function saveQuote() {
-    const body = { projectId: quote.projectId || null, meta: quote.meta, items: quote.items, paymentSchedule: quote.paymentSchedule, exclusions: quote.exclusions };
+    const body = { projectId: quote.projectId || null, status: quote.status, meta: quote.meta, items: quote.items, paymentSchedule: quote.paymentSchedule, exclusions: quote.exclusions };
     if (quote.id) {
       await A.api("/quotes/" + quote.id, { method: "PUT", body });
     } else {
       const rec = await A.api("/quotes", { method: "POST", body });
       quote.id = rec.id;
     }
-    A.toast("Quote saved");
+    A.toast(quote.status === "signed" ? "Saved — contract total synced to project" : "Quote saved");
   }
 
   /* ---------------- Editor pane ---------------- */
@@ -240,6 +243,9 @@ window.QuotesTab = (function () {
           '<div class="field span-2"><label>Project address</label><input type="text" id="qbAddress"></div>' +
           '<div class="field span-2"><label>Scope of work title</label><input type="text" id="qbScope"></div>' +
           '<div class="field"><label>Client name</label><input type="text" id="qbClient"></div>' +
+          '<div class="field"><label>Status</label><select id="qbStatus">' +
+            '<option value="draft">Draft</option><option value="sent">Sent to client</option><option value="signed">Signed (becomes contract)</option>' +
+          '</select></div>' +
           '<div class="field"><label>Estimated period (text)</label><input type="text" id="qbPeriod" placeholder="e.g. about 12 weeks"></div>' +
           '<div class="field"><label>Start date</label><input type="date" id="qbStart"></div>' +
           '<div class="field"><label>Est. completion date</label><input type="date" id="qbEnd"></div>' +
@@ -287,6 +293,10 @@ window.QuotesTab = (function () {
       el.value = quote.meta[key] || "";
       el.addEventListener("input", () => { quote.meta[key] = el.value; renderPreview(); });
     });
+
+    const statusSelect = document.getElementById("qbStatus");
+    statusSelect.value = quote.status || "draft";
+    statusSelect.addEventListener("change", () => { quote.status = statusSelect.value; renderPreview(); });
 
     // chip library
     const chipLib = document.getElementById("qbChipLib");
