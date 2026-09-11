@@ -43,7 +43,7 @@ window.DashboardTab = (function () {
       cardsHost.innerHTML = projects.map((p) => cardHtml(p)).join("");
       cardsHost.querySelectorAll("[data-open-project]").forEach((card) => {
         card.addEventListener("click", () => {
-          window.ProjectsTab.selectAndOpen(Number(card.getAttribute("data-open-project")));
+          window.ProjectsTab.selectOnly(Number(card.getAttribute("data-open-project")));
           A.switchTab("projects");
         });
       });
