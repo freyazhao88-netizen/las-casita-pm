@@ -41,6 +41,22 @@ window.App = (function () {
     }
   }, true);
 
+  // Shared print/PDF modal (used by pay stubs, wage statements, etc.) — bound once
+  // here so every caller just builds a document's HTML and hands it over.
+  function showPrintSheet(html) {
+    document.getElementById("payStubSheet").innerHTML = html;
+    document.getElementById("payStubModal").hidden = false;
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("btnCloseStub").addEventListener("click", () => {
+      document.getElementById("payStubModal").hidden = true;
+    });
+    document.getElementById("btnPrintStub").addEventListener("click", () => window.print());
+    document.getElementById("payStubModal").addEventListener("click", (e) => {
+      if (e.target.id === "payStubModal") document.getElementById("payStubModal").hidden = true;
+    });
+  });
+
   function toast(msg) {
     const el = document.getElementById("toast");
     el.textContent = msg;
@@ -150,6 +166,6 @@ window.App = (function () {
   return {
     fmtMoney, fmtDate, esc, toast, api, currentMonth, todayISO,
     state, loadCoreData, populateSelect, populateProjectSelects,
-    projectName, employeeName, switchTab
+    projectName, employeeName, switchTab, showPrintSheet
   };
 })();
