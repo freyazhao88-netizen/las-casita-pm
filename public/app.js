@@ -85,6 +85,8 @@ window.App = (function () {
     state.employees = employees;
     state.projects = projects;
     populateSelect(document.getElementById("attEmployee"), employees, (e) => e.id, (e) => e.name);
+    populateSelect(document.getElementById("wageEmployee"), employees, (e) => e.id, (e) => e.name);
+    populateSelect(document.getElementById("wageEmployeeFilter"), employees, (e) => e.id, (e) => e.name, "All employees");
     populateProjectSelects();
   }
 
