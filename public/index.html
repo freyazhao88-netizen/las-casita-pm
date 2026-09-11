@@ -136,7 +136,7 @@
         <div class="card">
           <div class="card-head"><h3>Entries this month</h3></div>
           <div class="table-wrap"><table class="data-table" id="attTable"><thead><tr>
-            <th>Date</th><th>Employee</th><th>Project</th><th>Days</th><th>Rate</th><th>Cost</th><th>Paid</th><th></th>
+            <th>Date</th><th>Employee</th><th>Project</th><th>Days</th><th>Rate</th><th>Cost</th><th></th>
           </tr></thead><tbody></tbody></table></div>
         </div>
         <div class="card">
@@ -335,9 +335,11 @@
     <!-- ===================== Payments received ===================== -->
     <section class="tab-panel" id="panel-payments">
       <div class="panel-head">
-        <h2>Payments received</h2>
-        <p class="hint">What each client has actually paid, vs. the contract total.</p>
+        <h2>Payments</h2>
+        <p class="hint">Cash in from clients, and cash out to your crew.</p>
       </div>
+
+      <h3 class="section-divider">Client payments received</h3>
       <div class="card">
         <div class="card-head"><h3>Log a payment</h3></div>
         <form id="payForm" class="field-grid field-grid-5">
@@ -359,6 +361,35 @@
         <div class="card-head"><h3>Payments</h3><span class="hint" id="payTotalHint"></span></div>
         <div class="table-wrap"><table class="data-table" id="payTable"><thead><tr>
           <th>Date</th><th>Project</th><th>Amount</th><th>Method</th><th>Reference</th><th>Notes</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <h3 class="section-divider">Payroll payments to workers</h3>
+      <p class="hint" style="margin:-8px 0 14px;">Not tied to a specific day, so advances work naturally — the balance below is all wages earned minus all payments made, all-time.</p>
+      <div class="card">
+        <div class="card-head"><h3>Log a payment / advance</h3></div>
+        <form id="wageForm" class="field-grid field-grid-5">
+          <div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="wageDate" required></div>
+          <div class="field"><label>Employee</label><select id="wageEmployee" required></select></div>
+          <div class="field"><label>Amount ($)</label><input type="number" id="wageAmount" step="0.01" min="0" required></div>
+          <div class="field"><label>Method</label><input type="text" id="wageMethod" placeholder="e.g. cash, Zelle, check"></div>
+          <div class="field"><label>Notes</label><input type="text" id="wageNotes" placeholder="e.g. advance"></div>
+          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add payment</button></div>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Wage balances</h3><span class="hint">Earned to date minus paid to date, per worker</span></div>
+        <div id="wageBalances"></div>
+      </div>
+      <div class="card">
+        <div class="head-controls" style="margin-bottom:14px;">
+          <label class="inline-field">Employee
+            <select id="wageEmployeeFilter"><option value="">All employees</option></select>
+          </label>
+        </div>
+        <div class="card-head"><h3>Payment history</h3><span class="hint" id="wageTotalHint"></span></div>
+        <div class="table-wrap"><table class="data-table" id="wageTable"><thead><tr>
+          <th>Date</th><th>Employee</th><th>Amount</th><th>Method</th><th>Notes</th><th></th>
         </tr></thead><tbody></tbody></table></div>
       </div>
     </section>
