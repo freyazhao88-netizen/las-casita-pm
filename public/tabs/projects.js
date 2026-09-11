@@ -64,8 +64,8 @@ window.ProjectsTab = (function () {
         '<div class="field span-2"><label>Address</label><input type="text" id="npAddress"></div>' +
         '<div class="field"><label>Client name</label><input type="text" id="npClient"></div>' +
         '<div class="field"><label>Status</label><select id="npStatus"><option value="active">Active</option><option value="on_hold">On hold</option><option value="completed">Completed</option></select></div>' +
-        '<div class="field"><label>Start date</label><input type="date" id="npStart"></div>' +
-        '<div class="field"><label>Est. end date</label><input type="date" id="npEnd"></div>' +
+        '<div class="field"><label>Start date</label><input type="date" min="1970-01-01" max="2099-12-31" id="npStart"></div>' +
+        '<div class="field"><label>Est. end date</label><input type="date" min="1970-01-01" max="2099-12-31" id="npEnd"></div>' +
         '<div class="field"><label>Quoted total ($)</label><input type="number" step="0.01" id="npQuoted"></div>' +
         '<div class="field span-2"><label>Notes</label><input type="text" id="npNotes"></div>' +
         '<div class="field span-2" style="display:flex;gap:10px;">' +
@@ -126,8 +126,8 @@ window.ProjectsTab = (function () {
           '<div class="field"><label>Status</label><select id="epStatus">' +
             ["active", "on_hold", "completed"].map((v) => '<option value="' + v + '"' + (p.status === v ? " selected" : "") + '>' + v.replace("_", " ") + '</option>').join("") +
           '</select></div>' +
-          '<div class="field"><label>Start date</label><input type="date" id="epStart" value="' + (p.startDate || "") + '"></div>' +
-          '<div class="field"><label>Est. end date</label><input type="date" id="epEnd" value="' + (p.estEndDate || "") + '"></div>' +
+          '<div class="field"><label>Start date</label><input type="date" min="1970-01-01" max="2099-12-31" id="epStart" value="' + (p.startDate || "") + '"></div>' +
+          '<div class="field"><label>Est. end date</label><input type="date" min="1970-01-01" max="2099-12-31" id="epEnd" value="' + (p.estEndDate || "") + '"></div>' +
           '<div class="field"><label>Quoted total ($)</label><input type="number" step="0.01" id="epQuoted" value="' + (p.quotedTotal || 0) + '"></div>' +
           '<div class="field span-2"><label>Notes</label><input type="text" id="epNotes" value="' + A.esc(p.notes || "") + '"></div>' +
           '<div class="field span-2"><button class="btn btn-primary btn-sm" type="submit">Save changes</button></div>' +
