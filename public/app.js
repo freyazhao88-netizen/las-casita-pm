@@ -20,6 +20,27 @@ window.App = (function () {
     ));
   }
 
+  // Native <input type="date"> technically allows a year of any length (its spec'd
+  // value format is \d{4,}-\d{2}-\d{2}), so scrolling/holding the year spinner can run
+  // past 9999. Clamp every date field on this page to a sane 4-digit year range.
+  const DATE_MIN_YEAR = 1970;
+  const DATE_MAX_YEAR = 2099;
+  function clampDateValue(value) {
+    const m = /^(\d+)-(\d{2})-(\d{2})$/.exec(value || "");
+    if (!m) return value;
+    let year = Number(m[1].slice(0, 4));
+    if (year > DATE_MAX_YEAR) year = DATE_MAX_YEAR;
+    if (year < DATE_MIN_YEAR) year = DATE_MIN_YEAR;
+    return String(year).padStart(4, "0") + "-" + m[2] + "-" + m[3];
+  }
+  document.addEventListener("input", (e) => {
+    const el = e.target;
+    if (el && el.tagName === "INPUT" && el.type === "date" && el.value) {
+      const clamped = clampDateValue(el.value);
+      if (clamped !== el.value) el.value = clamped;
+    }
+  }, true);
+
   function toast(msg) {
     const el = document.getElementById("toast");
     el.textContent = msg;
