@@ -60,21 +60,27 @@ router.delete("/wage-payments/:id", async (req, res, next) => {
 // negative, meaning the worker has been paid ahead of what they've earned so far).
 router.get("/payroll-balances", async (req, res, next) => {
   try {
+    const month = req.query.month || new Date().toISOString().slice(0, 7);
     const [employees, attendance, wagePayments] = await Promise.all([
       db.all("employees"),
       db.all("attendance"),
       db.all("wagePayments")
     ]);
     const result = employees.map((e) => {
-      const totalOwed = attendance.filter((a) => a.employeeId === e.id).reduce((s, a) => s + entryCost(a), 0);
+      const empAttendance = attendance.filter((a) => a.employeeId === e.id);
+      const totalOwed = empAttendance.reduce((s, a) => s + entryCost(a), 0);
       const totalPaid = wagePayments.filter((p) => p.employeeId === e.id).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      const thisMonthOwed = empAttendance
+        .filter((a) => a.workDate && a.workDate.slice(0, 7) === month)
+        .reduce((s, a) => s + entryCost(a), 0);
       return {
         employeeId: e.id,
         employeeName: e.name,
         active: e.active,
         totalOwed,
         totalPaid,
-        balance: totalOwed - totalPaid
+        balance: totalOwed - totalPaid,
+        thisMonthOwed
       };
     }).filter((r) => r.totalOwed > 0.005 || r.totalPaid > 0.005 || r.active);
     res.json(result);
