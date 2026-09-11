@@ -4,6 +4,7 @@ window.ProjectsTab = (function () {
   let selectedId = null;
   let creating = false;
   let bound = false;
+  let renderToken = 0;
 
   function bindOnce() {
     if (bound) return;
@@ -14,7 +15,21 @@ window.ProjectsTab = (function () {
 
   async function render() {
     bindOnce();
-    const allProjects = await A.api("/projects?summary=1");
+    const myToken = ++renderToken;
+
+    let allProjects;
+    try {
+      allProjects = await A.api("/projects?summary=1");
+    } catch (e) {
+      if (myToken !== renderToken) return; // a newer render started while this one failed
+      document.getElementById("projectsList").innerHTML =
+        '<div class="empty-state">Couldn\'t load projects.<br><button class="btn btn-sm" id="btnRetryProjects" style="margin-top:8px;">Retry</button></div>';
+      const retryBtn = document.getElementById("btnRetryProjects");
+      if (retryBtn) retryBtn.addEventListener("click", render);
+      return;
+    }
+    if (myToken !== renderToken) return; // a newer render superseded this one — drop stale results
+
     A.state.projects = allProjects;
     A.populateProjectSelects();
 
@@ -49,12 +64,26 @@ window.ProjectsTab = (function () {
       detailHost.innerHTML = '<div class="empty-state">Select a project on the left, or create a new one.</div>';
       return;
     }
-    const stages = await A.api("/projects/" + project.id + "/stages");
+    let stages;
+    try {
+      stages = await A.api("/projects/" + project.id + "/stages");
+    } catch (e) {
+      if (myToken !== renderToken) return;
+      detailHost.innerHTML = '<div class="empty-state">Couldn\'t load this project.<br><button class="btn btn-sm" id="btnRetryDetail" style="margin-top:8px;">Retry</button></div>';
+      const retryBtn = document.getElementById("btnRetryDetail");
+      if (retryBtn) retryBtn.addEventListener("click", render);
+      return;
+    }
+    if (myToken !== renderToken) return;
     detailHost.innerHTML = detailHtml(project, stages);
     bindDetail(project, stages);
   }
 
   function selectAndOpen(id) { selectedId = id; creating = false; render(); }
+  // Sets which project should be shown without triggering its own render — for callers
+  // that are about to switch to this tab anyway (switchTab() renders once on its own,
+  // so calling both would fire two overlapping renders racing each other).
+  function selectOnly(id) { selectedId = id; creating = false; }
 
   function newProjectFormHtml() {
     return (
@@ -195,5 +224,5 @@ window.ProjectsTab = (function () {
     if (btn) btn.addEventListener("click", () => { creating = true; selectedId = null; render(); });
   });
 
-  return { render, selectAndOpen };
+  return { render, selectAndOpen, selectOnly };
 })();
