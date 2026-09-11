@@ -238,7 +238,7 @@ window.QuotesTab = (function () {
         '<div class="card-head"><h3>Project info</h3></div>' +
         '<div class="field-grid">' +
           '<div class="field span-2"><label>Link to project (optional)</label><select id="qbProject"><option value="">— No linked project —</option></select></div>' +
-          '<div class="field"><label>Date</label><input type="date" id="qbDate"></div>' +
+          '<div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="qbDate"></div>' +
           '<div class="field"><label>Quote #</label><input type="text" id="qbQuoteNo"></div>' +
           '<div class="field span-2"><label>Project address</label><input type="text" id="qbAddress"></div>' +
           '<div class="field span-2"><label>Scope of work title</label><input type="text" id="qbScope"></div>' +
@@ -247,8 +247,8 @@ window.QuotesTab = (function () {
             '<option value="draft">Draft</option><option value="sent">Sent to client</option><option value="signed">Signed (becomes contract)</option>' +
           '</select></div>' +
           '<div class="field"><label>Estimated period (text)</label><input type="text" id="qbPeriod" placeholder="e.g. about 12 weeks"></div>' +
-          '<div class="field"><label>Start date</label><input type="date" id="qbStart"></div>' +
-          '<div class="field"><label>Est. completion date</label><input type="date" id="qbEnd"></div>' +
+          '<div class="field"><label>Start date</label><input type="date" min="1970-01-01" max="2099-12-31" id="qbStart"></div>' +
+          '<div class="field"><label>Est. completion date</label><input type="date" min="1970-01-01" max="2099-12-31" id="qbEnd"></div>' +
           '<div class="field span-2"><label>Lead source</label><input type="text" id="qbReferral" placeholder="e.g. Advertisement, or referred by Jane Doe" list="qbReferralList"><datalist id="qbReferralList"><option value="Advertisement"><option value="Referral"><option value="Google search"><option value="Repeat client"></datalist></div>' +
         '</div>' +
       '</div>' +
