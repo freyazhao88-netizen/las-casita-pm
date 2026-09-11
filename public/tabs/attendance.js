@@ -146,7 +146,7 @@ window.AttendanceTab = (function () {
       '<tbody>' + rowsHtml +
       '<tr class="qs-total-row"><td colspan="4">Total this period</td><td class="amt num">' + A.fmtMoney(total) + '</td></tr>' +
       '</tbody></table>' +
-      (balance ? '<p class="qs-term">Running balance (all wages earned to date minus all payments &amp; advances made to date): <strong class="num">' + A.fmtMoney(balance.balance) + '</strong></p>' : '') +
+      (balance ? '<p class="qs-term">Balance owed as of today (all wages earned minus all payments and advances made, all-time): <strong class="num">' + A.fmtMoney(balance.balance) + '</strong></p>' : '') +
       '<p class="qs-auth">I confirm the days, projects, and amounts listed above are accurate for this pay period.</p>' +
       '<div class="qs-sign"><div class="line"><hr class="rule"><div class="cap"><span>' + A.esc(employee ? employee.name : "Employee") + '</span><span>Date</span></div></div>' +
         '<div class="line"><hr class="rule"><div class="cap"><span>' + A.esc((c.companyName || "").replace(/ Inc\.?$/, "")) + '</span><span>Date</span></div></div></div>';
