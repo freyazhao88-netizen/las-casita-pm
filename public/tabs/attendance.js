@@ -8,14 +8,6 @@ window.AttendanceTab = (function () {
     if (bound) return;
     bound = true;
 
-    document.getElementById("btnCloseStub").addEventListener("click", () => {
-      document.getElementById("payStubModal").hidden = true;
-    });
-    document.getElementById("btnPrintStub").addEventListener("click", () => window.print());
-    document.getElementById("payStubModal").addEventListener("click", (e) => {
-      if (e.target.id === "payStubModal") document.getElementById("payStubModal").hidden = true;
-    });
-
     const monthInput = document.getElementById("attMonth");
     monthInput.value = A.currentMonth();
     monthInput.addEventListener("change", render);
@@ -151,8 +143,7 @@ window.AttendanceTab = (function () {
       '<div class="qs-sign"><div class="line"><hr class="rule"><div class="cap"><span>' + A.esc(employee ? employee.name : "Employee") + '</span><span>Date</span></div></div>' +
         '<div class="line"><hr class="rule"><div class="cap"><span>' + A.esc((c.companyName || "").replace(/ Inc\.?$/, "")) + '</span><span>Date</span></div></div></div>';
 
-    document.getElementById("payStubSheet").innerHTML = html;
-    document.getElementById("payStubModal").hidden = false;
+    A.showPrintSheet(html);
   }
 
   return { render };
