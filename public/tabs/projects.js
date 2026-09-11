@@ -138,8 +138,9 @@ window.ProjectsTab = (function () {
         tile("Labor cost", A.fmtMoney(s.laborTotal)) +
         tile("Material cost", A.fmtMoney(s.materialsTotal)) +
         tile("Total spend", A.fmtMoney(s.grandTotal)) +
-        tile("Quoted total", A.fmtMoney(s.quotedTotal)) +
-        (s.approvedChangeOrdersTotal > 0.005 ? tile("+ Approved change orders", A.fmtMoney(s.approvedChangeOrdersTotal)) : "") +
+        tile("Quote / Contract total", A.fmtMoney(s.quotedTotal)) +
+        tile("Change orders", (s.approvedChangeOrdersTotal >= 0 ? "+" : "") + A.fmtMoney(s.approvedChangeOrdersTotal)) +
+        tile("Total contract amount", A.fmtMoney(s.effectiveQuotedTotal)) +
         tile("Profit margin", (s.profitMargin >= 0 ? "+" : "") + A.fmtMoney(s.profitMargin)) +
         tile("Received from client", A.fmtMoney(s.amountReceived)) +
         tile("Outstanding balance", A.fmtMoney(s.outstandingBalance)) +
@@ -157,7 +158,9 @@ window.ProjectsTab = (function () {
           '</select></div>' +
           '<div class="field"><label>Start date</label><input type="date" min="1970-01-01" max="2099-12-31" id="epStart" value="' + (p.startDate || "") + '"></div>' +
           '<div class="field"><label>Est. end date</label><input type="date" min="1970-01-01" max="2099-12-31" id="epEnd" value="' + (p.estEndDate || "") + '"></div>' +
-          '<div class="field"><label>Quoted total ($)</label><input type="number" step="0.01" id="epQuoted" value="' + (p.quotedTotal || 0) + '"></div>' +
+          '<div class="field"><label>Quote / Contract total ($)</label><input type="number" step="0.01" id="epQuoted" value="' + (p.quotedTotal || 0) + '"></div>' +
+          '<div class="field"><label>Change orders (approved)</label><input type="text" disabled value="' + (s.approvedChangeOrdersTotal >= 0 ? "+" : "") + A.fmtMoney(s.approvedChangeOrdersTotal) + '" style="background:var(--surface-2);color:var(--muted);"></div>' +
+          '<div class="field span-2"><label>Total contract amount</label><input type="text" disabled value="' + A.fmtMoney(s.effectiveQuotedTotal) + '" style="background:var(--surface-2);font-weight:600;color:var(--ink);"></div>' +
           '<div class="field span-2"><label>Notes</label><input type="text" id="epNotes" value="' + A.esc(p.notes || "") + '"></div>' +
           '<div class="field span-2"><button class="btn btn-primary btn-sm" type="submit">Save changes</button></div>' +
         '</form>' +
