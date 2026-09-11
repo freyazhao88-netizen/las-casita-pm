@@ -126,7 +126,7 @@ window.ChangeOrdersTab = (function () {
         '<div class="card-head"><h3>Change order info</h3></div>' +
         '<div class="field-grid">' +
           '<div class="field span-2"><label>Project</label><select id="coProject" required></select></div>' +
-          '<div class="field"><label>Date</label><input type="date" id="coDate"></div>' +
+          '<div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="coDate"></div>' +
           '<div class="field"><label>CO #</label><input type="text" id="coNo"></div>' +
           '<div class="field span-2"><label>Title / description of change</label><input type="text" id="coTitle" placeholder="e.g. Add a window in the primary bedroom"></div>' +
           '<div class="field"><label>Client name</label><input type="text" id="coClient"></div>' +
