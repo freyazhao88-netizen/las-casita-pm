@@ -102,6 +102,7 @@ window.PaymentsTab = (function () {
           '<div class="head"><span>' + A.esc(b.employeeName) + '</span><span class="wage num" style="' + (b.balance > 0.005 ? 'color:var(--bad)' : 'color:var(--good)') + '">' + A.fmtMoney(b.balance) + '</span></div>' +
           '<div class="proj-line"><span>Earned to date</span><span class="num">' + A.fmtMoney(b.totalOwed) + '</span></div>' +
           '<div class="proj-line"><span>Paid to date</span><span class="num">' + A.fmtMoney(b.totalPaid) + '</span></div>' +
+          '<div class="proj-line"><span>Earned this month</span><span class="num">' + A.fmtMoney(b.thisMonthOwed) + '</span></div>' +
         '</div>'
       )).join("");
     }
