@@ -44,9 +44,14 @@ router.put("/employees/:id", async (req, res, next) => {
 
 router.delete("/employees/:id", async (req, res, next) => {
   try {
-    const attendance = await db.all("attendance");
-    const used = attendance.some((a) => a.employeeId === Number(req.params.id));
-    if (used) return res.status(400).json({ error: "Cannot delete: employee has attendance records. Mark inactive instead." });
+    const id = Number(req.params.id);
+    const [attendance, wagePayments] = await Promise.all([db.all("attendance"), db.all("wagePayments")]);
+    if (attendance.some((a) => a.employeeId === id)) {
+      return res.status(400).json({ error: "Cannot delete: employee has attendance records. Mark inactive instead." });
+    }
+    if (wagePayments.some((p) => p.employeeId === id)) {
+      return res.status(400).json({ error: "Cannot delete: employee has payroll payment records. Mark inactive instead." });
+    }
     const ok = await db.remove("employees", req.params.id);
     if (!ok) return res.status(404).json({ error: "Not found" });
     res.json({ ok: true });
