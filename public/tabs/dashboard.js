@@ -94,9 +94,10 @@ window.DashboardTab = (function () {
         '<div class="addr">' + A.esc(p.address || "No address") + '</div>' +
         '<div class="row"><span class="k">Labor cost</span><span class="v num">' + A.fmtMoney(s.laborTotal) + '</span></div>' +
         '<div class="row"><span class="k">Material cost</span><span class="v num">' + A.fmtMoney(s.materialsTotal) + '</span></div>' +
-        '<div class="row"><span class="k">Quoted total</span><span class="v num">' + A.fmtMoney(s.quotedTotal) + '</span></div>' +
-        (s.approvedChangeOrdersTotal > 0.005 ? '<div class="row"><span class="k">+ Approved change orders</span><span class="v num">' + A.fmtMoney(s.approvedChangeOrdersTotal) + '</span></div>' : "") +
         '<div class="row total"><span class="k">Total spend</span><span class="v num">' + A.fmtMoney(s.grandTotal) + '</span></div>' +
+        '<div class="row"><span class="k">Quote / Contract total</span><span class="v num">' + A.fmtMoney(s.quotedTotal) + '</span></div>' +
+        '<div class="row"><span class="k">Change orders</span><span class="v num">' + (s.approvedChangeOrdersTotal >= 0 ? "+" : "") + A.fmtMoney(s.approvedChangeOrdersTotal) + '</span></div>' +
+        '<div class="row total"><span class="k">Total contract amount</span><span class="v num">' + A.fmtMoney(s.effectiveQuotedTotal) + '</span></div>' +
         '<div class="row"><span class="k">Profit margin</span><span class="v num" style="' + varianceTone + '">' + (s.profitMargin >= 0 ? "+" : "") + A.fmtMoney(s.profitMargin) + '</span></div>' +
         '<div class="row"><span class="k">Received from client</span><span class="v num">' + A.fmtMoney(s.amountReceived) + '</span></div>' +
         '<div class="row"><span class="k">Outstanding balance</span><span class="v num">' + A.fmtMoney(s.outstandingBalance) + '</span></div>' +
