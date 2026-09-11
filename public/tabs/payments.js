@@ -2,6 +2,7 @@
 window.PaymentsTab = (function () {
   const A = window.App;
   let bound = false;
+  let companySettings = null;
 
   function bindOnce() {
     if (bound) return;
@@ -103,8 +104,12 @@ window.PaymentsTab = (function () {
           '<div class="proj-line"><span>Earned to date</span><span class="num">' + A.fmtMoney(b.totalOwed) + '</span></div>' +
           '<div class="proj-line"><span>Paid to date</span><span class="num">' + A.fmtMoney(b.totalPaid) + '</span></div>' +
           '<div class="proj-line"><span>Earned this month</span><span class="num">' + A.fmtMoney(b.thisMonthOwed) + '</span></div>' +
+          '<button class="btn btn-sm" data-wage-statement="' + b.employeeId + '" style="margin-top:9px;width:100%;">🖨 Print statement</button>' +
         '</div>'
       )).join("");
+      balHost.querySelectorAll("[data-wage-statement]").forEach((btn) => {
+        btn.addEventListener("click", () => printWageStatement(Number(btn.getAttribute("data-wage-statement"))));
+      });
     }
 
     const tbody = document.querySelector("#wageTable tbody");
@@ -130,6 +135,57 @@ window.PaymentsTab = (function () {
     }
     const total = list.reduce((s, p) => s + p.amount, 0);
     document.getElementById("wageTotalHint").textContent = list.length ? ("Total paid: " + A.fmtMoney(total)) : "";
+  }
+
+  async function printWageStatement(employeeId) {
+    if (!companySettings) companySettings = await A.api("/settings");
+    const [attendance, wagePayments] = await Promise.all([
+      A.api("/attendance?employeeId=" + employeeId),
+      A.api("/wage-payments?employeeId=" + employeeId)
+    ]);
+    const employee = A.state.employees.find((e) => e.id === employeeId);
+
+    const lines = [];
+    attendance.forEach((a) => lines.push({
+      date: a.workDate,
+      description: "Worked — " + A.projectName(a.projectId) + " (" + a.days + " d × " + A.fmtMoney(a.rate) + ")",
+      amount: a.cost
+    }));
+    wagePayments.forEach((p) => lines.push({
+      date: p.paymentDate,
+      description: "Payment" + (p.method ? " — " + p.method : "") + (p.notes ? " (" + p.notes + ")" : ""),
+      amount: -(Number(p.amount) || 0)
+    }));
+    lines.sort((a, b) => a.date.localeCompare(b.date));
+
+    let running = 0;
+    const rowsHtml = lines.map((l) => {
+      running += l.amount;
+      return '<tr><td class="cat">' + A.esc(A.fmtDate(l.date)) + '</td>' +
+        '<td class="desc">' + A.esc(l.description) + '</td>' +
+        '<td class="amt num">' + (l.amount >= 0 ? "+" : "") + A.fmtMoney(l.amount) + '</td>' +
+        '<td class="amt num">' + A.fmtMoney(running) + '</td></tr>';
+    }).join("") || '<tr><td colspan="4" style="padding:16px 0;color:var(--muted);font-size:12px;">No activity yet.</td></tr>';
+
+    const c = companySettings;
+    const html =
+      '<div class="qs-head">' +
+        '<div class="qs-logo"><img src="/logo.jpg" alt="' + A.esc(c.companyName || "Las Casita Inc.") + '" class="qs-logo-img"></div>' +
+        '<div class="qs-title"><h3>Wage Statement</h3></div>' +
+      '</div>' +
+      '<div class="qs-meta">' +
+        '<div class="col"><p><strong>' + A.esc(c.companyName || "") + '</strong></p><p class="muted">' + A.esc(c.companyAddr1 || "") + '</p><p class="muted">' + A.esc(c.companyAddr2 || "") + '</p></div>' +
+        '<div class="col right"><p><span class="muted">As of:</span> ' + A.esc(A.fmtDate(A.todayISO())) + '</p><p><span class="muted">Employee:</span> ' + A.esc(employee ? employee.name : "") + '</p></div>' +
+      '</div>' +
+      '<table class="qs-table"><thead><tr><th>Date</th><th>Description</th><th class="amt">Amount</th><th class="amt">Balance</th></tr></thead>' +
+      '<tbody>' + rowsHtml +
+      '<tr class="qs-total-row"><td colspan="3">Balance owed as of today</td><td class="amt num">' + A.fmtMoney(running) + '</td></tr>' +
+      '</tbody></table>' +
+      '<p class="qs-auth">This statement lists every day worked and every payment made to date. I confirm the entries above are accurate.</p>' +
+      '<div class="qs-sign"><div class="line"><hr class="rule"><div class="cap"><span>' + A.esc(employee ? employee.name : "Employee") + '</span><span>Date</span></div></div>' +
+        '<div class="line"><hr class="rule"><div class="cap"><span>' + A.esc((c.companyName || "").replace(/ Inc\.?$/, "")) + '</span><span>Date</span></div></div></div>';
+
+    A.showPrintSheet(html);
   }
 
   return { render };
