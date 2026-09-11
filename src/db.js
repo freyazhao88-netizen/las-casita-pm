@@ -21,7 +21,8 @@ const TABLES = {
   stages: "stages",
   quotes: "quotes",
   changeOrders: "change_orders",
-  payments: "payments"
+  payments: "payments",
+  wagePayments: "wage_payments"
 };
 
 const DEFAULT_STAGE_SUGGESTIONS = [
