@@ -33,6 +33,8 @@ window.EmployeesTab = (function () {
     const list = await A.api("/employees");
     A.state.employees = list;
     A.populateSelect(document.getElementById("attEmployee"), list, (e) => e.id, (e) => e.name);
+    A.populateSelect(document.getElementById("wageEmployee"), list, (e) => e.id, (e) => e.name);
+    A.populateSelect(document.getElementById("wageEmployeeFilter"), list, (e) => e.id, (e) => e.name, "All employees");
     const tbody = document.querySelector("#empTable tbody");
     if (!list.length) {
       tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No employees yet.</td></tr>';
