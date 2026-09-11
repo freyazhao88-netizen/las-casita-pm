@@ -70,7 +70,7 @@ window.StagesTab = (function () {
         '<td>' + A.esc(s.projectName) + '</td>' +
         '<td><input class="stg-name" type="text" value="' + A.esc(s.name) + '" style="border:1px solid transparent;background:transparent;width:150px;"></td>' +
         '<td><input class="stg-dept" type="text" value="' + A.esc(s.department || "") + '" placeholder="—" style="width:120px;"></td>' +
-        '<td><input class="stg-date" type="date" value="' + (s.inspectionDate || "") + '"></td>' +
+        '<td><input class="stg-date" type="date" min="1970-01-01" max="2099-12-31" value="' + (s.inspectionDate || "") + '"></td>' +
         '<td><select class="stg-status ' + s.status + '">' +
           '<option value="scheduled"' + (s.status === "scheduled" ? " selected" : "") + '>Scheduled</option>' +
           '<option value="passed"' + (s.status === "passed" ? " selected" : "") + '>Passed</option>' +
