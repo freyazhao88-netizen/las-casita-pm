@@ -35,7 +35,6 @@ router.post("/attendance", async (req, res, next) => {
       workDate,
       days: days === undefined || days === "" ? 1 : Number(days),
       rate: Number(rate) || 0,
-      paymentStatus: "unpaid",
       notes: notes || ""
     });
     res.status(201).json({ ...rec, cost: entryCost(rec) });
@@ -53,7 +52,6 @@ router.put("/attendance/:id", async (req, res, next) => {
     if ("days" in req.body) patch.days = Number(req.body.days);
     if ("rate" in req.body) patch.rate = Number(req.body.rate);
     if ("notes" in req.body) patch.notes = req.body.notes;
-    if ("paymentStatus" in req.body) patch.paymentStatus = req.body.paymentStatus;
     const updated = await db.update("attendance", req.params.id, patch);
     res.json({ ...updated, cost: entryCost(updated) });
   } catch (e) { next(e); }
@@ -67,7 +65,10 @@ router.delete("/attendance/:id", async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// Monthly rollup: per employee -> total days, total wage, breakdown by project, payment status
+// Monthly rollup: per employee -> total days, total wage, breakdown by project.
+// Whether it's actually been paid lives in the wage-payments ledger (see
+// /api/payroll-balances), not on individual attendance entries — that's the
+// only way advances (paid ahead of the day being logged) stay consistent.
 router.get("/attendance/summary", async (req, res, next) => {
   try {
     const month = req.query.month;
@@ -86,7 +87,6 @@ router.get("/attendance/summary", async (req, res, next) => {
           employeeName: emp ? emp.name : "Unknown",
           totalDays: 0,
           totalWage: 0,
-          unpaidWage: 0,
           byProject: {}
         };
       }
@@ -94,7 +94,6 @@ router.get("/attendance/summary", async (req, res, next) => {
       const cost = entryCost(a);
       bucket.totalDays += Number(a.days) || 0;
       bucket.totalWage += cost;
-      if (a.paymentStatus !== "paid") bucket.unpaidWage += cost;
       if (!bucket.byProject[a.projectId]) {
         const proj = projects.find((p) => p.id === a.projectId);
         bucket.byProject[a.projectId] = {
@@ -117,8 +116,7 @@ router.get("/attendance/summary", async (req, res, next) => {
       month,
       employees: result,
       grandTotalDays: result.reduce((s, b) => s + b.totalDays, 0),
-      grandTotalWage: result.reduce((s, b) => s + b.totalWage, 0),
-      grandUnpaidWage: result.reduce((s, b) => s + b.unpaidWage, 0)
+      grandTotalWage: result.reduce((s, b) => s + b.totalWage, 0)
     });
   } catch (e) { next(e); }
 });
