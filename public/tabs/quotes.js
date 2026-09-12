@@ -20,7 +20,7 @@ window.QuotesTab = (function () {
       periodHeader: "Construction period", tbd: "To be determined",
       periodDisclaimer: ". Does not include holidays, natural disasters, material shortages, inspection delays, or utility company delays.",
       start: "Start", estCompletion: "Est. completion",
-      paymentHeader: "Payment schedule",
+      paymentHeader: "Payment schedule", due: "Due",
       exclusionsHeader: "Not included / exclusions",
       terminationHeader: "Termination",
       terminationText: "Project disputes or any other reason that the owner decides to terminate said contract — the current outstanding balances and materials purchased for the job will need to be paid off to the contractor."
@@ -35,7 +35,7 @@ window.QuotesTab = (function () {
       periodHeader: "施工工期", tbd: "待定",
       periodDisclaimer: "。不包含节假日、自然灾害、材料短缺、验收延误或市政公用事业延误等情况。",
       start: "开工", estCompletion: "预计完工",
-      paymentHeader: "付款计划",
+      paymentHeader: "付款计划", due: "到期日",
       exclusionsHeader: "不包含项目 / 免责声明",
       terminationHeader: "终止条款",
       terminationText: "如因项目纠纷或业主决定终止合同,现有未付余额及已为本工程采购的材料费用,均需结清给承包商。"
@@ -70,7 +70,10 @@ window.QuotesTab = (function () {
     "Fourteenth payment due upon flooring complete": "第十四笔款项于地板完成后支付",
     "Fifteenth payment due upon bath complete": "第十五笔款项于卫浴完成后支付",
     "Sixteenth payment due upon kitchen complete": "第十六笔款项于厨房完成后支付",
-    "Seventeenth payment due upon final inspection approval": "第十七笔款项于最终验收通过后支付"
+    "Seventeenth payment due upon final inspection approval": "第十七笔款项于最终验收通过后支付",
+    "Third payment due upon framing inspection approval": "第三笔款项于框架验收通过后支付",
+    "Fourth payment due upon final inspection approval": "第四笔款项于最终验收通过后支付",
+    "Final payment (balance) due within 30 days of project completion": "尾款(余额)于项目完工后30天内付清"
   };
 
   var EXCLUSION_ZH = {
@@ -85,22 +88,10 @@ window.QuotesTab = (function () {
     return [
       "First payment (deposit) due upon signing of contract",
       "Second payment due upon start of construction",
-      "Third payment due upon trenching / demo complete",
-      "Fourth payment due upon lumber delivery",
-      "Fifth payment due upon rough electric inspection approval",
-      "Sixth payment due upon rough plumbing inspection approval",
-      "Seventh payment due upon rough mechanical inspection approval",
-      "Eighth payment due upon framing inspection approval",
-      "Ninth payment due upon insulation approval",
-      "Tenth payment due upon stucco complete",
-      "Eleventh payment due upon roof complete",
-      "Twelfth payment due upon drywall approval",
-      "Thirteenth payment due upon paint complete",
-      "Fourteenth payment due upon flooring complete",
-      "Fifteenth payment due upon bath complete",
-      "Sixteenth payment due upon kitchen complete",
-      "Seventeenth payment due upon final inspection approval"
-    ].map((label, i) => ({ id: uid(), label, amount: i === 0 ? "1000" : "" }));
+      "Third payment due upon framing inspection approval",
+      "Fourth payment due upon final inspection approval",
+      "Final payment (balance) due within 30 days of project completion"
+    ].map((label, i) => ({ id: uid(), label, amount: i === 0 ? "1000" : "", dueDate: "" }));
   }
 
   function defaultExclusions() {
@@ -326,7 +317,7 @@ window.QuotesTab = (function () {
     renderPreview();
 
     document.getElementById("qbAddPay").addEventListener("click", () => {
-      quote.paymentSchedule.push({ id: uid(), label: "", amount: "" });
+      quote.paymentSchedule.push({ id: uid(), label: "", amount: "", dueDate: "" });
       renderPaySchedule(); renderPreview();
     });
     document.getElementById("qbAddExcl").addEventListener("click", () => {
@@ -440,11 +431,13 @@ window.QuotesTab = (function () {
     label.addEventListener("input", () => { p.label = label.value; renderPreview(); });
     const amt = document.createElement("input"); amt.type = "number"; amt.step = "0.01"; amt.className = "pay-amount"; amt.placeholder = "0.00"; amt.value = p.amount;
     amt.addEventListener("input", () => { p.amount = amt.value; renderPreview(); renderBalance(); });
+    const due = document.createElement("input"); due.type = "date"; due.min = "1970-01-01"; due.max = "2099-12-31"; due.className = "pay-date"; due.value = p.dueDate || "";
+    due.addEventListener("input", () => { p.dueDate = due.value; renderPreview(); });
     const actions = document.createElement("div"); actions.className = "row-actions";
     const del = document.createElement("button"); del.type = "button"; del.textContent = "✕"; del.className = "danger"; del.title = "Remove step";
     del.addEventListener("click", () => { quote.paymentSchedule = quote.paymentSchedule.filter((x) => x.id !== p.id); renderPaySchedule(); renderPreview(); });
     actions.appendChild(del);
-    row.appendChild(label); row.appendChild(amt); row.appendChild(actions);
+    row.appendChild(label); row.appendChild(amt); row.appendChild(due); row.appendChild(actions);
     return row;
   }
   function renderPaySchedule() {
@@ -502,7 +495,9 @@ window.QuotesTab = (function () {
     if (!quote.items.length) itemsHtml = '<tr><td colspan="3" style="padding:16px 0;color:var(--muted);font-size:12px;">' + A.esc(t.noItems) + '</td></tr>';
 
     const payHtml = quote.paymentSchedule.map((p, i) => (
-      '<tr><td class="n">' + (i + 1) + '.</td><td>' + A.esc(payLabel(p.label) || "Payment step") + '</td><td class="amt num">' + A.fmtMoney(parseFloat(p.amount) || 0) + '</td></tr>'
+      '<tr><td class="n">' + (i + 1) + '.</td><td>' + A.esc(payLabel(p.label) || "Payment step") +
+      (p.dueDate ? ' <span class="muted">(' + A.esc(t.due) + ': ' + A.esc(fmtDateLang(p.dueDate, lang)) + ')</span>' : '') +
+      '</td><td class="amt num">' + A.fmtMoney(parseFloat(p.amount) || 0) + '</td></tr>'
     )).join("");
     const exclHtml = quote.exclusions.map((x) => x.text ? '<li>' + A.esc(exclLabel(x.text)) + '</li>' : "").join("");
 
