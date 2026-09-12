@@ -50,6 +50,8 @@ window.MaterialsTab = (function () {
     bound = true;
 
     document.getElementById("matDate").value = A.todayISO();
+    A.populateMonthSelect(document.getElementById("matMonthFilter"), 24, true);
+    document.getElementById("matMonthFilter").addEventListener("change", renderMaterials);
     document.getElementById("matProjectFilter").addEventListener("change", renderMaterials);
     document.getElementById("matStatusFilter").addEventListener("change", renderMaterials);
 
@@ -95,6 +97,8 @@ window.MaterialsTab = (function () {
     });
 
     document.getElementById("expDate").value = A.todayISO();
+    A.populateMonthSelect(document.getElementById("expMonthFilter"), 24, true);
+    document.getElementById("expMonthFilter").addEventListener("change", renderExpenses);
     document.getElementById("expProjectFilter").addEventListener("change", renderExpenses);
 
     document.getElementById("expStatus").addEventListener("change", (e) => {
@@ -137,9 +141,11 @@ window.MaterialsTab = (function () {
       const cats = await A.api("/category-library");
       catList.innerHTML = cats.map((c) => '<option value="' + A.esc(c) + '">').join("");
     }
+    const month = document.getElementById("matMonthFilter").value;
     const projectId = document.getElementById("matProjectFilter").value;
     const projectStatus = document.getElementById("matStatusFilter").value;
     const params = [];
+    if (month) params.push("month=" + month);
     if (projectId) params.push("projectId=" + projectId);
     if (projectStatus) params.push("projectStatus=" + projectStatus);
     const list = await A.api("/materials" + (params.length ? "?" + params.join("&") : ""));
@@ -188,8 +194,12 @@ window.MaterialsTab = (function () {
       const cats = await A.api("/expense-category-library");
       catList.innerHTML = cats.map((c) => '<option value="' + A.esc(c) + '">').join("");
     }
+    const month = document.getElementById("expMonthFilter").value;
     const projectId = document.getElementById("expProjectFilter").value;
-    const list = await A.api("/expenses" + (projectId ? "?projectId=" + projectId : ""));
+    const params = [];
+    if (month) params.push("month=" + month);
+    if (projectId) params.push("projectId=" + projectId);
+    const list = await A.api("/expenses" + (params.length ? "?" + params.join("&") : ""));
     const tbody = document.querySelector("#expTable tbody");
     if (!list.length) {
       tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No expenses logged yet.</td></tr>';
