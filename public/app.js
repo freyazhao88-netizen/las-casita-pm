@@ -101,6 +101,7 @@ window.App = (function () {
     state.employees = employees;
     state.projects = projects;
     populateSelect(document.getElementById("attEmployee"), employees, (e) => e.id, (e) => e.name);
+    populateSelect(document.getElementById("attEmployeeFilter"), employees, (e) => e.id, (e) => e.name, "All employees");
     populateSelect(document.getElementById("wageEmployee"), employees, (e) => e.id, (e) => e.name);
     populateSelect(document.getElementById("wageEmployeeFilter"), employees, (e) => e.id, (e) => e.name, "All employees");
     populateProjectSelects();
@@ -127,6 +128,7 @@ window.App = (function () {
   function populateProjectSelects() {
     const active = state.projects.slice().sort((a, b) => a.name.localeCompare(b.name));
     populateSelect(document.getElementById("attProject"), active, (p) => p.id, (p) => p.name);
+    populateSelect(document.getElementById("attProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
     populateSelect(document.getElementById("matProject"), active, (p) => p.id, (p) => p.name);
     populateSelect(document.getElementById("matProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
     populateSelect(document.getElementById("stgProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
