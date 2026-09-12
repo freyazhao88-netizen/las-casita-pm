@@ -54,6 +54,7 @@ window.MaterialsTab = (function () {
     document.getElementById("matMonthFilter").addEventListener("change", renderMaterials);
     document.getElementById("matProjectFilter").addEventListener("change", renderMaterials);
     document.getElementById("matStatusFilter").addEventListener("change", renderMaterials);
+    document.getElementById("matPaymentStatusFilter").addEventListener("change", renderMaterials);
 
     document.getElementById("matReceiptInput").addEventListener("change", handleReceiptFileChosen);
     document.getElementById("expReceiptInput").addEventListener("change", handleReceiptFileChosen);
@@ -100,6 +101,7 @@ window.MaterialsTab = (function () {
     A.populateMonthSelect(document.getElementById("expMonthFilter"), 24, true);
     document.getElementById("expMonthFilter").addEventListener("change", renderExpenses);
     document.getElementById("expProjectFilter").addEventListener("change", renderExpenses);
+    document.getElementById("expPaymentStatusFilter").addEventListener("change", renderExpenses);
 
     document.getElementById("expStatus").addEventListener("change", (e) => {
       document.getElementById("expPaymentMethodField").hidden = e.target.value !== "reimbursed";
@@ -144,10 +146,12 @@ window.MaterialsTab = (function () {
     const month = document.getElementById("matMonthFilter").value;
     const projectId = document.getElementById("matProjectFilter").value;
     const projectStatus = document.getElementById("matStatusFilter").value;
+    const paymentStatus = document.getElementById("matPaymentStatusFilter").value;
     const params = [];
     if (month) params.push("month=" + month);
     if (projectId) params.push("projectId=" + projectId);
     if (projectStatus) params.push("projectStatus=" + projectStatus);
+    if (paymentStatus) params.push("paymentStatus=" + paymentStatus);
     const list = await A.api("/materials" + (params.length ? "?" + params.join("&") : ""));
     const tbody = document.querySelector("#matTable tbody");
     if (!list.length) {
@@ -196,9 +200,11 @@ window.MaterialsTab = (function () {
     }
     const month = document.getElementById("expMonthFilter").value;
     const projectId = document.getElementById("expProjectFilter").value;
+    const status = document.getElementById("expPaymentStatusFilter").value;
     const params = [];
     if (month) params.push("month=" + month);
     if (projectId) params.push("projectId=" + projectId);
+    if (status) params.push("status=" + status);
     const list = await A.api("/expenses" + (params.length ? "?" + params.join("&") : ""));
     const tbody = document.querySelector("#expTable tbody");
     if (!list.length) {
