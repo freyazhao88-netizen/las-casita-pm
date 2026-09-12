@@ -15,7 +15,7 @@
     <div class="logo-plate logo-plate-lg">
       <img src="/logo.jpg" alt="Las Casita Construction" class="logo-img logo-img-lg">
     </div>
-    <p class="sub">Project Manager</p>
+    <p class="sub">Project Manager 项目管理</p>
     <input type="password" id="loginPassword" placeholder="Access password" autocomplete="current-password" required>
     <button type="submit" class="btn btn-primary btn-block">Enter</button>
     <p class="login-error" id="loginError" hidden></p>
@@ -30,25 +30,25 @@
         <img src="/logo.jpg" alt="Las Casita Construction" class="logo-img logo-img-sm">
       </div>
       <div class="brand-text">
-        <p>Project Manager</p>
+        <p>Project Manager 项目管理</p>
       </div>
     </div>
     <nav class="side-nav" id="tabnav">
-      <div class="nav-label">Workspace</div>
-      <button class="nav-item" data-tab="dashboard" data-title="Dashboard"><span class="nav-icon">⌂</span><span>Dashboard</span></button>
-      <button class="nav-item" data-tab="projects" data-title="Projects"><span class="nav-icon">▣</span><span>Projects</span></button>
-      <div class="nav-label">Cost &amp; crew</div>
-      <button class="nav-item" data-tab="attendance" data-title="Attendance &amp; payroll"><span class="nav-icon">◷</span><span>Attendance</span></button>
-      <button class="nav-item" data-tab="materials" data-title="Material purchases"><span class="nav-icon">▤</span><span>Materials</span></button>
-      <button class="nav-item" data-tab="employees" data-title="Employees"><span class="nav-icon">☺</span><span>Employees</span></button>
-      <div class="nav-label">Delivery</div>
-      <button class="nav-item" data-tab="stages" data-title="Inspections &amp; stage acceptance"><span class="nav-icon">✓</span><span>Inspections</span></button>
-      <button class="nav-item" data-tab="changeorders" data-title="Change orders"><span class="nav-icon">✎</span><span>Change Orders</span></button>
-      <button class="nav-item" data-tab="quotes" data-title="Quotes / Contracts"><span class="nav-icon">▱</span><span>Quotes / Contracts</span></button>
-      <div class="nav-label">Billing</div>
-      <button class="nav-item" data-tab="payments" data-title="Payments received"><span class="nav-icon">$</span><span>Payments</span></button>
+      <div class="nav-label">Workspace 工作台</div>
+      <button class="nav-item" data-tab="dashboard" data-title="Dashboard 总览"><span class="nav-icon">⌂</span><span>Dashboard 总览</span></button>
+      <button class="nav-item" data-tab="projects" data-title="Projects 项目"><span class="nav-icon">▣</span><span>Projects 项目</span></button>
+      <div class="nav-label">Cost &amp; crew 成本与人工</div>
+      <button class="nav-item" data-tab="attendance" data-title="Attendance &amp; payroll 考勤与工资"><span class="nav-icon">◷</span><span>Attendance 考勤</span></button>
+      <button class="nav-item" data-tab="materials" data-title="Materials &amp; expenses 材料与花费"><span class="nav-icon">▤</span><span>Materials 材料</span></button>
+      <button class="nav-item" data-tab="employees" data-title="Employees 员工"><span class="nav-icon">☺</span><span>Employees 员工</span></button>
+      <div class="nav-label">Delivery 交付</div>
+      <button class="nav-item" data-tab="stages" data-title="Inspections &amp; stage acceptance 验收与阶段确认"><span class="nav-icon">✓</span><span>Inspections 验收</span></button>
+      <button class="nav-item" data-tab="changeorders" data-title="Change orders 变更单"><span class="nav-icon">✎</span><span>Change Orders 变更单</span></button>
+      <button class="nav-item" data-tab="quotes" data-title="Quotes / Contracts 报价/合同"><span class="nav-icon">▱</span><span>Quotes / Contracts 报价/合同</span></button>
+      <div class="nav-label">Billing 账务</div>
+      <button class="nav-item" data-tab="payments" data-title="Payments 收付款"><span class="nav-icon">$</span><span>Payments 收付款</span></button>
     </nav>
-    <div class="sidebar-bottom">Las Casita Inc.<br><span class="dim">Project Manager</span></div>
+    <div class="sidebar-bottom">Las Casita Inc.<br><span class="dim">Project Manager 项目管理</span></div>
   </aside>
 
   <div class="main-col">
@@ -65,7 +65,7 @@
     <!-- ===================== Dashboard ===================== -->
     <section class="tab-panel" id="panel-dashboard">
       <div class="panel-head">
-        <h2>Portfolio overview</h2>
+        <h2>Portfolio overview 项目总览</h2>
         <p class="hint">Total labor + material cost per project, quote comparison, and stage progress.</p>
       </div>
       <div class="stat-row" id="dashStats"></div>
@@ -84,7 +84,7 @@
     <!-- ===================== Projects ===================== -->
     <section class="tab-panel" id="panel-projects">
       <div class="panel-head">
-        <h2>Projects</h2>
+        <h2>Projects 项目</h2>
         <button class="btn btn-primary btn-sm" id="btnNewProject" type="button">+ New project</button>
       </div>
       <div class="head-controls" style="margin-bottom:14px;">
@@ -111,7 +111,7 @@
     <!-- ===================== Attendance ===================== -->
     <section class="tab-panel" id="panel-attendance">
       <div class="panel-head">
-        <h2>Attendance &amp; payroll</h2>
+        <h2>Attendance &amp; payroll 考勤与工资</h2>
         <div class="head-controls">
           <label class="inline-field">Month
             <input type="month" id="attMonth">
@@ -149,10 +149,10 @@
     <!-- ===================== Materials ===================== -->
     <section class="tab-panel" id="panel-materials">
       <div class="panel-head">
-        <h2>Materials &amp; expenses</h2>
+        <h2>Materials &amp; expenses 材料与花费</h2>
       </div>
 
-      <h3 class="section-divider">Material purchases</h3>
+      <h3 class="section-divider">Material purchases 材料采购</h3>
       <div class="head-controls" style="margin-bottom:14px;">
         <label class="inline-field">Project
           <select id="matProjectFilter"><option value="">All projects</option></select>
@@ -192,7 +192,7 @@
         </tr></thead><tbody></tbody></table></div>
       </div>
 
-      <h3 class="section-divider">Other expenses</h3>
+      <h3 class="section-divider">Other expenses 其它花费</h3>
       <div class="head-controls" style="margin-bottom:14px;">
         <label class="inline-field">Project
           <select id="expProjectFilter"><option value="">All projects</option></select>
@@ -207,6 +207,7 @@
           <div class="field"><label>Category</label><input type="text" id="expCategory" placeholder="e.g. Postage" list="expCategoryList"><datalist id="expCategoryList"></datalist></div>
           <div class="field"><label>Amount ($)</label><input type="number" id="expAmount" step="0.01" min="0" required></div>
           <div class="field"><label>Status</label><select id="expStatus"><option value="unreimbursed">Unreimbursed</option><option value="reimbursed">Reimbursed</option></select></div>
+          <div class="field" id="expPaymentMethodField" hidden><label>Payment method</label><input type="text" id="expPaymentMethod" placeholder="e.g. check, cash, Zelle"></div>
           <div class="field span-2"><label>Description</label><input type="text" id="expDescription" placeholder="What was this for"></div>
           <div class="field span-2"><label>Notes</label><input type="text" id="expNotes" placeholder="optional"></div>
           <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add expense</button></div>
@@ -224,7 +225,7 @@
     <!-- ===================== Employees ===================== -->
     <section class="tab-panel" id="panel-employees">
       <div class="panel-head">
-        <h2>Employees</h2>
+        <h2>Employees 员工</h2>
       </div>
       <div class="card">
         <div class="card-head"><h3>Add employee</h3></div>
@@ -248,7 +249,7 @@
     <!-- ===================== Inspections / stage acceptance ===================== -->
     <section class="tab-panel" id="panel-stages">
       <div class="panel-head">
-        <h2>Inspections &amp; stage acceptance</h2>
+        <h2>Inspections &amp; stage acceptance 验收与阶段确认</h2>
         <p class="hint">Every stage across every project — check dates and pass/fail without opening each project.</p>
       </div>
       <div class="card">
@@ -286,7 +287,7 @@
     <!-- ===================== Change Orders ===================== -->
     <section class="tab-panel" id="panel-changeorders">
       <div class="panel-head">
-        <h2>Change orders</h2>
+        <h2>Change orders 变更单</h2>
         <button class="btn btn-primary btn-sm" id="btnNewChangeOrder" type="button">+ New change order</button>
       </div>
       <div id="coListView">
@@ -330,7 +331,7 @@
     <!-- ===================== Quotes ===================== -->
     <section class="tab-panel" id="panel-quotes">
       <div class="panel-head">
-        <h2>Quotes / Contracts</h2>
+        <h2>Quotes / Contracts 报价/合同</h2>
         <button class="btn btn-primary btn-sm" id="btnNewQuote" type="button">+ New quote</button>
       </div>
       <div id="quotesListView">
@@ -365,11 +366,11 @@
     <!-- ===================== Payments received ===================== -->
     <section class="tab-panel" id="panel-payments">
       <div class="panel-head">
-        <h2>Payments</h2>
+        <h2>Payments 收付款</h2>
         <p class="hint">Cash in from clients, and cash out to your crew.</p>
       </div>
 
-      <h3 class="section-divider">Client payments received</h3>
+      <h3 class="section-divider">Client payments received 客户收款</h3>
       <div class="card">
         <div class="card-head"><h3>Log a payment</h3></div>
         <form id="payForm" class="field-grid field-grid-5">
@@ -394,7 +395,7 @@
         </tr></thead><tbody></tbody></table></div>
       </div>
 
-      <h3 class="section-divider">Payroll payments to workers</h3>
+      <h3 class="section-divider">Payroll payments to workers 工人工资付款</h3>
       <p class="hint" style="margin:-8px 0 14px;">Not tied to a specific day, so advances work naturally — the balance below is all wages earned minus all payments made, all-time.</p>
       <div class="card">
         <div class="card-head"><h3>Log a payment / advance</h3></div>
@@ -431,7 +432,7 @@
 <!-- ---------------- Settings modal ---------------- -->
 <div class="modal-overlay" id="settingsModal" hidden>
   <div class="modal">
-    <div class="modal-head"><h3>Company settings</h3><button class="btn-ghost" id="btnCloseSettings">✕</button></div>
+    <div class="modal-head"><h3>Company settings 公司设置</h3><button class="btn-ghost" id="btnCloseSettings">✕</button></div>
     <form id="settingsForm" class="field-grid">
       <div class="field span-2"><label>Company name</label><input type="text" id="setCompanyName"></div>
       <div class="field"><label>Address line 1</label><input type="text" id="setAddr1"></div>
@@ -453,7 +454,7 @@
 <!-- ---------------- Pay stub modal ---------------- -->
 <div class="modal-overlay" id="payStubModal" hidden>
   <div class="modal stub-modal">
-    <div class="modal-head no-print"><h3>Print preview</h3>
+    <div class="modal-head no-print"><h3>Print preview 打印预览</h3>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-primary btn-sm" id="btnPrintStub" type="button">🖨 Print / Save PDF</button>
         <button class="btn-ghost" id="btnCloseStub">✕</button>
