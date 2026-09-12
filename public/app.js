@@ -166,10 +166,10 @@ window.App = (function () {
     populateSelect(document.getElementById("matProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
     populateSelect(document.getElementById("stgProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
     populateSelect(document.getElementById("coProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
-    populateSelect(document.getElementById("payProject"), active, (p) => p.id, (p) => p.name);
     populateSelect(document.getElementById("payProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
-    populateSelect(document.getElementById("expProject"), active, (p) => p.id, (p) => p.name);
     populateSelect(document.getElementById("expProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
+    const nameOptions = document.getElementById("projectNameOptions");
+    if (nameOptions) nameOptions.innerHTML = active.map((p) => '<option value="' + esc(p.name) + '">').join("");
     populateSelect(document.getElementById("slgProject"), active, (p) => p.id, (p) => p.name);
     populateSelect(document.getElementById("slgProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
   }
@@ -177,6 +177,21 @@ window.App = (function () {
   function projectName(id) {
     const p = state.projects.find((x) => x.id === Number(id));
     return p ? p.name : "—";
+  }
+
+  // For records that can point at either a real project or a typed one-off job name
+  // (Other expenses, Client payments) — shows whichever one is set.
+  function projectNameOf(entry) {
+    return entry.projectId ? projectName(entry.projectId) : (entry.adhocProjectName || "—");
+  }
+
+  // Resolves a typed project-name string to an existing project's id when it matches
+  // one exactly, so a combo text+datalist field can submit either a real project or a
+  // one-off name through the same input.
+  function resolveProjectInput(typedName) {
+    const name = (typedName || "").trim();
+    const match = state.projects.find((p) => p.name === name);
+    return match ? { projectId: match.id, adhocProjectName: "" } : { projectId: null, adhocProjectName: name };
   }
 
   function employeeName(id) {
@@ -206,6 +221,6 @@ window.App = (function () {
   return {
     fmtMoney, fmtDate, esc, toast, api, currentMonth, todayISO, populateMonthSelect,
     state, loadCoreData, populateSelect, populateProjectSelects,
-    projectName, employeeName, switchTab, showPrintSheet, showDetailModal
+    projectName, projectNameOf, resolveProjectInput, employeeName, switchTab, showPrintSheet, showDetailModal
   };
 })();
