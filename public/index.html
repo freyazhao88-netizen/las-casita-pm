@@ -428,7 +428,7 @@
 
       <h3 class="section-divider">Client payments received 客户收款</h3>
       <div class="card">
-        <div class="card-head"><h3>Log a payment</h3></div>
+        <div class="card-head"><h3>Receive payment 收款</h3></div>
         <form id="payForm" class="field-grid field-grid-5">
           <div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="payDate" required></div>
           <div class="field"><label>Project</label><input type="text" id="payProject" list="projectNameOptions" placeholder="Pick or type a project name" required></div>
@@ -452,7 +452,7 @@
       </div>
 
       <h3 class="section-divider">Payroll payments to workers 工人工资付款</h3>
-      <p class="hint" style="margin:-8px 0 14px;">Not tied to a specific day, so advances work naturally — the balance below is all wages earned minus all payments made, all-time.</p>
+      <p class="hint" style="margin:-8px 0 14px;">Not tied to a specific day, so advances work naturally — pick a month below to see that month's balance brought forward, activity, and balance carried forward.</p>
       <div class="card">
         <div class="card-head"><h3>Log a payment / advance</h3></div>
         <form id="wageForm" class="field-grid field-grid-5">
@@ -465,7 +465,13 @@
         </form>
       </div>
       <div class="card">
-        <div class="card-head"><h3>Wage balances</h3><span class="hint">Earned to date minus paid to date, per worker</span></div>
+        <div class="card-head">
+          <h3>Wage balances</h3>
+          <label class="inline-field">Month
+            <select id="wageBalanceMonth"></select>
+          </label>
+        </div>
+        <p class="hint" style="margin:-4px 0 12px;">Balance brought forward from before the selected month, this month's activity, and the balance carried forward.</p>
         <div id="wageBalances"></div>
       </div>
       <div class="card">
