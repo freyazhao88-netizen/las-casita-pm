@@ -11,9 +11,10 @@ function inMonth(dateStr, month) {
 
 router.get("/attendance", async (req, res, next) => {
   try {
-    const { month, employeeId, projectId } = req.query;
+    const { month, date, employeeId, projectId } = req.query;
     let list = await db.all("attendance");
     if (month) list = list.filter((a) => inMonth(a.workDate, month));
+    if (date) list = list.filter((a) => a.workDate === date);
     if (employeeId) list = list.filter((a) => a.employeeId === Number(employeeId));
     if (projectId) list = list.filter((a) => a.projectId === Number(projectId));
     list.sort((a, b) => a.workDate.localeCompare(b.workDate));
