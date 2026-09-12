@@ -13,14 +13,15 @@ window.DashboardTab = (function () {
   async function render() {
     bindOnce();
     const month = document.getElementById("dashMonth").value || A.currentMonth();
-    const [projects, monthAttendance, monthMaterials, allMaterials, allExpenses, allStages, openTodos] = await Promise.all([
+    const [projects, monthAttendance, monthMaterials, allMaterials, allExpenses, allStages, openTodos, paymentReminders] = await Promise.all([
       A.api("/projects?summary=1"),
       A.api("/attendance?month=" + month),
       A.api("/materials?month=" + month),
       A.api("/materials"),
       A.api("/expenses"),
       A.api("/stages"),
-      A.api("/site-logs/open-todos")
+      A.api("/site-logs/open-todos"),
+      A.api("/quotes/payment-reminders")
     ]);
     A.state.projects = projects;
     A.populateProjectSelects();
@@ -87,6 +88,7 @@ window.DashboardTab = (function () {
 
     renderUpcomingInspections(allStages, activeIds);
     renderOpenTodos(openTodos);
+    renderUpcomingPayments(paymentReminders);
   }
 
   function showPayablesDetail(unpaidMaterials, unpaidExpenses, total) {
@@ -148,6 +150,33 @@ window.DashboardTab = (function () {
       '<tbody>' + rows + '</tbody></table></div>';
 
     A.showDetailModal(title, html);
+  }
+
+  function renderUpcomingPayments(reminders) {
+    const host = document.getElementById("dashUpcomingPayments");
+    if (!reminders.length) {
+      host.innerHTML = '<div class="empty-state">Nothing due in the next 10 days.</div>';
+      return;
+    }
+    host.innerHTML = reminders.map((r) => {
+      const overdue = r.daysUntil < 0;
+      const dueNote = overdue ? (Math.abs(r.daysUntil) + " day" + (Math.abs(r.daysUntil) === 1 ? "" : "s") + " overdue")
+        : (r.daysUntil === 0 ? "due today" : "due in " + r.daysUntil + " day" + (r.daysUntil === 1 ? "" : "s"));
+      return (
+        '<div class="inspect-row" data-open-project="' + r.projectId + '" style="cursor:pointer;">' +
+          '<div class="inspect-dot ' + (overdue ? "failed" : "scheduled") + '">' + (overdue ? "✕" : "!") + '</div>' +
+          '<div class="inspect-text"><strong>' + A.esc(r.projectName) + ' — ' + A.esc(r.label) + '</strong>' +
+          '<small>' + A.fmtMoney(r.amount) + ' · ' + A.esc(A.fmtDate(r.dueDate)) + '</small></div>' +
+          '<span class="badge ' + (overdue ? "failed" : "scheduled") + '">' + A.esc(dueNote) + '</span>' +
+        '</div>'
+      );
+    }).join("");
+    host.querySelectorAll("[data-open-project]").forEach((row) => {
+      row.addEventListener("click", () => {
+        window.ProjectsTab.selectOnly(Number(row.getAttribute("data-open-project")));
+        A.switchTab("projects");
+      });
+    });
   }
 
   function renderOpenTodos(openTodos) {
