@@ -1,6 +1,7 @@
 "use strict";
 const express = require("express");
 const db = require("../db");
+const receipts = require("../receipts");
 
 const router = express.Router();
 
@@ -53,14 +54,51 @@ router.put("/expenses/:id", async (req, res, next) => {
 
 router.delete("/expenses/:id", async (req, res, next) => {
   try {
+    const rec = await db.find("expenses", req.params.id);
     const ok = await db.remove("expenses", req.params.id);
     if (!ok) return res.status(404).json({ error: "Not found" });
+    if (rec && rec.receiptPath) await receipts.removeReceipt(rec.receiptPath);
     res.json({ ok: true });
   } catch (e) { next(e); }
 });
 
 router.get("/expense-category-library", (req, res) => {
   res.json(db.EXPENSE_CATEGORY_LIBRARY);
+});
+
+router.post("/expenses/:id/receipt", (req, res, next) => {
+  receipts.upload(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    try {
+      const rec = await db.find("expenses", req.params.id);
+      if (!rec) return res.status(404).json({ error: "Not found" });
+      if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+      const storagePath = await receipts.uploadReceipt("expenses", req.params.id, req.file, rec.receiptPath);
+      try {
+        res.json(await db.update("expenses", req.params.id, { receiptPath: storagePath }));
+      } catch (dbErr) {
+        await receipts.removeReceipt(storagePath);
+        throw dbErr;
+      }
+    } catch (e) { next(e); }
+  });
+});
+
+router.get("/expenses/:id/receipt", async (req, res, next) => {
+  try {
+    const rec = await db.find("expenses", req.params.id);
+    if (!rec || !rec.receiptPath) return res.status(404).json({ error: "No receipt on file" });
+    res.json({ url: await receipts.signedUrlFor(rec.receiptPath) });
+  } catch (e) { next(e); }
+});
+
+router.delete("/expenses/:id/receipt", async (req, res, next) => {
+  try {
+    const rec = await db.find("expenses", req.params.id);
+    if (!rec || !rec.receiptPath) return res.status(404).json({ error: "No receipt on file" });
+    await receipts.removeReceipt(rec.receiptPath);
+    res.json(await db.update("expenses", req.params.id, { receiptPath: null }));
+  } catch (e) { next(e); }
 });
 
 module.exports = router;
