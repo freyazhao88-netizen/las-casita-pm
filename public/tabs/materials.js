@@ -102,18 +102,19 @@ window.MaterialsTab = (function () {
 
     document.getElementById("expForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const body = {
+      const projectInput = A.resolveProjectInput(document.getElementById("expProject").value);
+      if (!projectInput.projectId && !projectInput.adhocProjectName) { A.toast("Pick or type a project"); return; }
+      const body = Object.assign({
         expenseDate: document.getElementById("expDate").value,
-        projectId: document.getElementById("expProject").value,
         category: document.getElementById("expCategory").value,
         description: document.getElementById("expDescription").value,
         amount: document.getElementById("expAmount").value,
         status: document.getElementById("expStatus").value,
         paymentMethod: document.getElementById("expPaymentMethod").value,
         notes: document.getElementById("expNotes").value
-      };
-      if (!body.projectId) { A.toast("Pick a project"); return; }
+      }, projectInput);
       await A.api("/expenses", { method: "POST", body });
+      document.getElementById("expProject").value = "";
       document.getElementById("expCategory").value = "";
       document.getElementById("expDescription").value = "";
       document.getElementById("expAmount").value = "";
@@ -195,7 +196,7 @@ window.MaterialsTab = (function () {
       tbody.innerHTML = list.map((e) => (
         '<tr>' +
           '<td>' + e.expenseDate + '</td>' +
-          '<td>' + A.esc(A.projectName(e.projectId)) + '</td>' +
+          '<td>' + A.esc(A.projectNameOf(e)) + '</td>' +
           '<td>' + A.esc(e.category) + '</td>' +
           '<td>' + A.esc(e.description) + '</td>' +
           '<td class="amt num">' + A.fmtMoney(e.amount) + '</td>' +
