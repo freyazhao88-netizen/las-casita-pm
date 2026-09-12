@@ -4,11 +4,12 @@ window.DashboardTab = (function () {
 
   async function render() {
     const curMonth = A.currentMonth();
-    const [projects, curAtt, curMat, allStages] = await Promise.all([
+    const [projects, curAtt, curMat, allStages, openTodos] = await Promise.all([
       A.api("/projects?summary=1"),
       A.api("/attendance/summary?month=" + curMonth),
       A.api("/materials?month=" + curMonth),
-      A.api("/stages")
+      A.api("/stages"),
+      A.api("/site-logs/open-todos")
     ]);
     A.state.projects = projects;
     A.populateProjectSelects();
@@ -52,6 +53,30 @@ window.DashboardTab = (function () {
     }
 
     renderUpcomingInspections(allStages, activeIds);
+    renderOpenTodos(openTodos);
+  }
+
+  function renderOpenTodos(openTodos) {
+    const host = document.getElementById("dashOpenTodos");
+    if (!openTodos.length) {
+      host.innerHTML = '<div class="empty-state">Nothing pending — all site-log to-dos are checked off.</div>';
+      return;
+    }
+    host.innerHTML = openTodos.slice(0, 10).map((t) => (
+      '<label class="todo-list" style="display:block;">' +
+        '<span style="display:flex;align-items:center;gap:7px;">' +
+          '<input type="checkbox" data-todo-toggle="' + t.logId + ':' + t.todoIndex + '">' +
+          '<span><strong>' + A.esc(t.projectName) + '</strong> — ' + A.esc(t.text) + ' <small style="color:var(--muted);">(' + A.esc(A.fmtDate(t.logDate)) + ')</small></span>' +
+        '</span>' +
+      '</label>'
+    )).join("");
+    host.querySelectorAll("[data-todo-toggle]").forEach((cb) => {
+      cb.addEventListener("change", async () => {
+        const [logId, idx] = cb.getAttribute("data-todo-toggle").split(":");
+        await A.api("/site-logs/" + logId + "/todos/" + idx, { method: "PUT", body: { done: true } });
+        render();
+      });
+    });
   }
 
   function renderUpcomingInspections(allStages, activeIds) {
