@@ -13,16 +13,17 @@ window.PaymentsTab = (function () {
 
     document.getElementById("payForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const body = {
+      const projectInput = A.resolveProjectInput(document.getElementById("payProject").value);
+      if (!projectInput.projectId && !projectInput.adhocProjectName) { A.toast("Pick or type a project"); return; }
+      const body = Object.assign({
         paymentDate: document.getElementById("payDate").value,
-        projectId: document.getElementById("payProject").value,
         amount: document.getElementById("payAmount").value,
         method: document.getElementById("payMethod").value,
         reference: document.getElementById("payReference").value,
         notes: document.getElementById("payNotes").value
-      };
-      if (!body.projectId) { A.toast("Pick a project"); return; }
+      }, projectInput);
       await A.api("/payments", { method: "POST", body });
+      document.getElementById("payProject").value = "";
       document.getElementById("payAmount").value = "";
       document.getElementById("payMethod").value = "";
       document.getElementById("payReference").value = "";
@@ -68,7 +69,7 @@ window.PaymentsTab = (function () {
       tbody.innerHTML = list.map((p) => (
         '<tr>' +
           '<td>' + p.paymentDate + '</td>' +
-          '<td>' + A.esc(A.projectName(p.projectId)) + '</td>' +
+          '<td>' + A.esc(A.projectNameOf(p)) + '</td>' +
           '<td class="amt num">' + A.fmtMoney(p.amount) + '</td>' +
           '<td>' + A.esc(p.method) + '</td>' +
           '<td>' + A.esc(p.reference) + '</td>' +
