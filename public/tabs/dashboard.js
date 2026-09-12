@@ -94,6 +94,7 @@ window.DashboardTab = (function () {
         '<div class="addr">' + A.esc(p.address || "No address") + '</div>' +
         '<div class="row"><span class="k">Labor cost</span><span class="v num">' + A.fmtMoney(s.laborTotal) + '</span></div>' +
         '<div class="row"><span class="k">Material cost</span><span class="v num">' + A.fmtMoney(s.materialsTotal) + '</span></div>' +
+        '<div class="row"><span class="k">Other expenses</span><span class="v num">' + A.fmtMoney(s.otherExpensesTotal) + '</span></div>' +
         '<div class="row total"><span class="k">Total spend</span><span class="v num">' + A.fmtMoney(s.grandTotal) + '</span></div>' +
         '<div class="row"><span class="k">Quote / Contract total</span><span class="v num">' + A.fmtMoney(s.quotedTotal) + '</span></div>' +
         '<div class="row"><span class="k">Change orders</span><span class="v num">' + (s.approvedChangeOrdersTotal >= 0 ? "+" : "") + A.fmtMoney(s.approvedChangeOrdersTotal) + '</span></div>' +
