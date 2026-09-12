@@ -84,6 +84,10 @@
     modal.hidden = true;
   });
 
+  document.getElementById("btnExportAll").addEventListener("click", () => {
+    window.location.href = "/api/export/all";
+  });
+
   document.getElementById("passwordForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const msgEl = document.getElementById("pwMsg");
