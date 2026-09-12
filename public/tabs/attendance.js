@@ -65,7 +65,7 @@ window.AttendanceTab = (function () {
   function renderTable(entries) {
     const tbody = document.querySelector("#attTable tbody");
     if (!entries.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No attendance logged this month yet.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No attendance logged this month yet.</td></tr>';
       return;
     }
     tbody.innerHTML = entries.map((a) => (
@@ -74,8 +74,6 @@ window.AttendanceTab = (function () {
         '<td>' + A.esc(A.employeeName(a.employeeId)) + '</td>' +
         '<td>' + A.esc(A.projectName(a.projectId)) + '</td>' +
         '<td class="num">' + a.days + '</td>' +
-        '<td class="amt num">' + A.fmtMoney(a.rate) + '</td>' +
-        '<td class="amt num">' + A.fmtMoney(a.cost) + '</td>' +
         '<td><button class="row-del" data-id="' + a.id + '" title="Delete">✕</button></td>' +
       '</tr>'
     )).join("");
