@@ -111,11 +111,12 @@ window.App = (function () {
   // plain text box with no picker), so month pickers use a plain <select> instead —
   // works identically everywhere. Populates the most recent `monthsBack` months,
   // newest first, and selects the current month by default.
-  function populateMonthSelect(select, monthsBack) {
+  function populateMonthSelect(select, monthsBack, includeAllOption) {
     if (!select || select.dataset.populated) return;
     select.dataset.populated = "1";
     const now = new Date();
     const options = [];
+    if (includeAllOption) options.push('<option value="">All months</option>');
     for (let i = 0; i < (monthsBack || 24); i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const value = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
@@ -123,7 +124,7 @@ window.App = (function () {
       options.push('<option value="' + value + '">' + label + '</option>');
     }
     select.innerHTML = options.join("");
-    select.value = currentMonth();
+    select.value = includeAllOption ? "" : currentMonth();
   }
 
   async function loadCoreData() {
