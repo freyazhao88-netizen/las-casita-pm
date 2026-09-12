@@ -16,11 +16,11 @@ function addSheet(workbook, name, columns, rows) {
 
 router.get("/export/all", async (req, res, next) => {
   try {
-    const [employees, projects, attendance, materials, expenses, payments, wagePayments, changeOrders, quotes, stages] =
+    const [employees, projects, attendance, materials, expenses, payments, wagePayments, changeOrders, quotes, stages, siteLogs] =
       await Promise.all([
         db.all("employees"), db.all("projects"), db.all("attendance"), db.all("materials"),
         db.all("expenses"), db.all("payments"), db.all("wagePayments"), db.all("changeOrders"),
-        db.all("quotes"), db.all("stages")
+        db.all("quotes"), db.all("stages"), db.all("siteLogs")
       ]);
 
     const projectName = (id) => { const p = projects.find((x) => x.id === id); return p ? p.name : ""; };
@@ -223,6 +223,22 @@ router.get("/export/all", async (req, res, next) => {
       stages.map((s) => ({
         projectName: projectName(s.projectId), name: s.name, department: s.department,
         inspectionDate: s.inspectionDate, status: s.status, notes: s.notes
+      }))
+    );
+
+    addSheet(workbook, "Site Logs",
+      [
+        { header: "Date", key: "logDate", width: 12 },
+        { header: "Project", key: "projectName", width: 22 },
+        { header: "Weather", key: "weather", width: 16 },
+        { header: "Crew", key: "crew", width: 24 },
+        { header: "Notes", key: "notes", width: 30 },
+        { header: "To-do items", key: "todos", width: 40 }
+      ],
+      siteLogs.map((l) => ({
+        logDate: l.logDate, projectName: projectName(l.projectId), weather: l.weather, crew: l.crew,
+        notes: l.notes,
+        todos: (l.todos || []).map((t) => (t.done ? "[x] " : "[ ] ") + t.text).join("; ")
       }))
     );
 
