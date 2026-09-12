@@ -42,6 +42,7 @@
       <button class="nav-item" data-tab="materials" data-title="Materials &amp; expenses 材料与花费"><span class="nav-icon">▤</span><span>Materials 材料</span></button>
       <button class="nav-item" data-tab="employees" data-title="Employees 员工"><span class="nav-icon">☺</span><span>Employees 员工</span></button>
       <div class="nav-label">Delivery 交付</div>
+      <button class="nav-item" data-tab="sitelogs" data-title="Site Logs 工地日志"><span class="nav-icon">📋</span><span>Site Logs 工地日志</span></button>
       <button class="nav-item" data-tab="stages" data-title="Inspections &amp; stage acceptance 验收与阶段确认"><span class="nav-icon">✓</span><span>Inspections 验收</span></button>
       <button class="nav-item" data-tab="changeorders" data-title="Change orders 变更单"><span class="nav-icon">✎</span><span>Change Orders 变更单</span></button>
       <button class="nav-item" data-tab="quotes" data-title="Quotes / Contracts 报价/合同"><span class="nav-icon">▱</span><span>Quotes / Contracts 报价/合同</span></button>
@@ -74,9 +75,15 @@
           <div class="card-head" style="margin-bottom:12px;"><h3>Project progress</h3><span class="hint">Active projects only</span></div>
           <div id="dashProjectCards" class="card-grid"></div>
         </div>
-        <div class="card">
-          <div class="card-head"><h3>Upcoming inspections</h3></div>
-          <div id="dashRecentStages"></div>
+        <div>
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-head"><h3>Upcoming inspections</h3></div>
+            <div id="dashRecentStages"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Open to-dos 待办事项</h3><span class="hint">From site logs</span></div>
+            <div id="dashOpenTodos"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -257,6 +264,41 @@
           <th>Name</th><th>Default day rate</th><th>SSN</th><th>ID number</th><th>Notes</th><th>Active</th><th></th>
         </tr></thead><tbody></tbody></table></div>
       </div>
+    </section>
+
+    <!-- ===================== Site Logs ===================== -->
+    <section class="tab-panel" id="panel-sitelogs">
+      <div class="panel-head">
+        <h2>Site Logs 工地日志</h2>
+        <p class="hint">Daily notes per project — weather, crew, issues, and a to-do checklist that surfaces on the Dashboard until checked off.</p>
+      </div>
+      <div class="head-controls" style="margin-bottom:14px;">
+        <label class="inline-field">Project
+          <select id="slgProjectFilter"><option value="">All projects</option></select>
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Log today</h3></div>
+        <form id="slgForm" class="field-grid field-grid-3">
+          <div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="slgDate" required></div>
+          <div class="field"><label>Project</label><select id="slgProject" required></select></div>
+          <div class="field"><label>Weather</label><input type="text" id="slgWeather" placeholder="e.g. Sunny, 75°F"></div>
+          <div class="field span-full"><label>Crew present</label><input type="text" id="slgCrew" placeholder="e.g. Yong Wang, Hongqi He"></div>
+          <div class="field span-full"><label>Notes</label><input type="text" id="slgNotes" placeholder="Anything worth remembering today"></div>
+          <div class="field span-full">
+            <label>To-do list (optional)</label>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <input type="text" id="slgTodoInput" placeholder="e.g. Order more drywall" style="flex:1;">
+              <button class="btn btn-sm" type="button" id="slgAddTodo">+ Add to list</button>
+            </div>
+            <div id="slgTodoPending" class="chip-lib"></div>
+          </div>
+          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Save log</button></div>
+        </form>
+      </div>
+
+      <div id="slgList"></div>
     </section>
 
     <!-- ===================== Inspections / stage acceptance ===================== -->
@@ -493,6 +535,7 @@
 <script src="/tabs/attendance.js"></script>
 <script src="/tabs/materials.js"></script>
 <script src="/tabs/employees.js"></script>
+<script src="/tabs/siteLogs.js"></script>
 <script src="/tabs/stages.js"></script>
 <script src="/tabs/changeOrders.js"></script>
 <script src="/tabs/quotes.js"></script>
