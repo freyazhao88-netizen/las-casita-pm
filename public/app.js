@@ -55,7 +55,21 @@ window.App = (function () {
     document.getElementById("payStubModal").addEventListener("click", (e) => {
       if (e.target.id === "payStubModal") document.getElementById("payStubModal").hidden = true;
     });
+
+    document.getElementById("btnCloseDetail").addEventListener("click", () => {
+      document.getElementById("detailModal").hidden = true;
+    });
+    document.getElementById("detailModal").addEventListener("click", (e) => {
+      if (e.target.id === "detailModal") document.getElementById("detailModal").hidden = true;
+    });
   });
+
+  // Generic small modal for breakdowns (payables/receivables, etc.) — not print-oriented.
+  function showDetailModal(title, html) {
+    document.getElementById("detailModalTitle").textContent = title;
+    document.getElementById("detailModalBody").innerHTML = html;
+    document.getElementById("detailModal").hidden = false;
+  }
 
   function toast(msg) {
     const el = document.getElementById("toast");
@@ -173,6 +187,6 @@ window.App = (function () {
   return {
     fmtMoney, fmtDate, esc, toast, api, currentMonth, todayISO,
     state, loadCoreData, populateSelect, populateProjectSelects,
-    projectName, employeeName, switchTab, showPrintSheet
+    projectName, employeeName, switchTab, showPrintSheet, showDetailModal
   };
 })();
