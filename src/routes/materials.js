@@ -28,14 +28,17 @@ router.get("/materials", async (req, res, next) => {
 
 router.post("/materials", async (req, res, next) => {
   try {
-    const { projectId, purchaseDate, vendor, description, category, mode, qty, unitPrice, amount, paymentStatus, paymentMethod, invoiceNumber } = req.body || {};
-    if (!projectId || !purchaseDate) {
-      return res.status(400).json({ error: "projectId and purchaseDate are required" });
+    const { projectId, adhocProjectName, purchaseDate, vendor, description, category, mode, qty, unitPrice, amount, paymentStatus, paymentMethod, invoiceNumber } = req.body || {};
+    if (!purchaseDate) {
+      return res.status(400).json({ error: "purchaseDate is required" });
     }
-    if (!(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
+    const cleanAdhoc = (adhocProjectName || "").trim();
+    if (!projectId && !cleanAdhoc) return res.status(400).json({ error: "Pick a project or type a one-off job name" });
+    if (projectId && !(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
     const useMode = mode === "qty" ? "qty" : "flat";
     const rec = await db.insert("materials", {
-      projectId: Number(projectId),
+      projectId: projectId ? Number(projectId) : null,
+      adhocProjectName: projectId ? "" : cleanAdhoc,
       purchaseDate,
       vendor: vendor || "",
       description: description || "",
@@ -57,10 +60,10 @@ router.put("/materials/:id", async (req, res, next) => {
     const rec = await db.find("materials", req.params.id);
     if (!rec) return res.status(404).json({ error: "Not found" });
     const patch = {};
-    ["purchaseDate", "vendor", "description", "category", "paymentStatus", "paymentMethod", "invoiceNumber"].forEach((k) => {
+    ["purchaseDate", "vendor", "description", "category", "paymentStatus", "paymentMethod", "invoiceNumber", "adhocProjectName"].forEach((k) => {
       if (k in req.body) patch[k] = req.body[k];
     });
-    if ("projectId" in req.body) patch.projectId = Number(req.body.projectId);
+    if ("projectId" in req.body) patch.projectId = req.body.projectId ? Number(req.body.projectId) : null;
     if ("mode" in req.body) patch.mode = req.body.mode === "qty" ? "qty" : "flat";
     if ("qty" in req.body) patch.qty = req.body.qty === "" ? null : Number(req.body.qty);
     if ("unitPrice" in req.body) patch.unitPrice = req.body.unitPrice === "" ? null : Number(req.body.unitPrice);
