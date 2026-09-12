@@ -16,11 +16,11 @@ function addSheet(workbook, name, columns, rows) {
 
 router.get("/export/all", async (req, res, next) => {
   try {
-    const [employees, projects, attendance, materials, expenses, payments, wagePayments, changeOrders, quotes, stages, siteLogs] =
+    const [employees, projects, attendance, materials, expenses, payments, wagePayments, changeOrders, quotes, stages, siteLogs, warranties] =
       await Promise.all([
         db.all("employees"), db.all("projects"), db.all("attendance"), db.all("materials"),
         db.all("expenses"), db.all("payments"), db.all("wagePayments"), db.all("changeOrders"),
-        db.all("quotes"), db.all("stages"), db.all("siteLogs")
+        db.all("quotes"), db.all("stages"), db.all("siteLogs"), db.all("warranties")
       ]);
 
     const projectName = (id) => { const p = projects.find((x) => x.id === id); return p ? p.name : ""; };
@@ -239,6 +239,22 @@ router.get("/export/all", async (req, res, next) => {
         logDate: l.logDate, projectName: projectName(l.projectId), weather: l.weather, crew: l.crew,
         notes: l.notes,
         todos: (l.todos || []).map((t) => (t.done ? "[x] " : "[ ] ") + t.text).join("; ")
+      }))
+    );
+
+    addSheet(workbook, "Warranties",
+      [
+        { header: "Project", key: "projectName", width: 22 },
+        { header: "Item", key: "item", width: 18 },
+        { header: "Provider", key: "providerName", width: 20 },
+        { header: "Contact", key: "providerContact", width: 20 },
+        { header: "Start date", key: "startDate", width: 12 },
+        { header: "Expiration date", key: "expirationDate", width: 14 },
+        { header: "Notes", key: "notes", width: 26 }
+      ],
+      warranties.map((w) => ({
+        projectName: projectName(w.projectId), item: w.item, providerName: w.providerName,
+        providerContact: w.providerContact, startDate: w.startDate, expirationDate: w.expirationDate, notes: w.notes
       }))
     );
 
