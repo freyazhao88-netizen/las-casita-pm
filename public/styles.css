@@ -152,6 +152,14 @@ hr{ border:none; border-top:1px solid var(--line); }
 .receipt-btn{ border:none; background:none; color:var(--accent); font-size:11.5px; font-weight:600; padding:2px 4px; cursor:pointer; }
 .receipt-btn:hover{ text-decoration:underline; }
 
+.todo-list{ margin-top:6px; }
+.todo-list label{ display:flex; align-items:center; gap:7px; font-size:12.5px; padding:3px 0; cursor:pointer; }
+.todo-list input[type=checkbox]{ cursor:pointer; }
+.todo-list label.done{ color:var(--muted); text-decoration:line-through; }
+.todo-chip{ display:inline-flex; align-items:center; gap:6px; }
+.todo-chip button{ border:none; background:none; color:var(--muted); cursor:pointer; font-size:12px; padding:0; }
+.todo-chip button:hover{ color:var(--bad); }
+
 .masked-field{ display:flex; align-items:center; gap:7px; }
 .masked-field .masked-input{ display:none; border:1px solid var(--line); border-radius:4px; padding:4px 6px; font-size:12.5px; width:120px; background:var(--surface); }
 .masked-field.revealed .masked-display{ display:none; }
