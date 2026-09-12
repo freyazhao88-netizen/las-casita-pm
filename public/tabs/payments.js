@@ -34,6 +34,8 @@ window.PaymentsTab = (function () {
 
     document.getElementById("wageDate").value = A.todayISO();
     document.getElementById("wageEmployeeFilter").addEventListener("change", render);
+    A.populateMonthSelect(document.getElementById("wageBalanceMonth"), 24);
+    document.getElementById("wageBalanceMonth").addEventListener("change", render);
 
     document.getElementById("wageForm").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -90,26 +92,29 @@ window.PaymentsTab = (function () {
 
   async function renderPayroll() {
     const employeeId = document.getElementById("wageEmployeeFilter").value;
+    const balanceMonth = document.getElementById("wageBalanceMonth").value || A.currentMonth();
     const [list, balances] = await Promise.all([
       A.api("/wage-payments" + (employeeId ? "?employeeId=" + employeeId : "")),
-      A.api("/payroll-balances")
+      A.api("/payroll-balances?month=" + balanceMonth)
     ]);
 
+    const monthLabel = monthLabelOf(balanceMonth);
     const balHost = document.getElementById("wageBalances");
     if (!balances.length) {
       balHost.innerHTML = '<div class="empty-state">No employees yet.</div>';
     } else {
       balHost.innerHTML = balances.map((b) => (
         '<div class="emp-summary-block">' +
-          '<div class="head"><span>' + A.esc(b.employeeName) + '</span><span class="wage num" style="' + (b.balance > 0.005 ? 'color:var(--bad)' : 'color:var(--good)') + '">' + A.fmtMoney(b.balance) + '</span></div>' +
-          '<div class="proj-line"><span>Earned to date</span><span class="num">' + A.fmtMoney(b.totalOwed) + '</span></div>' +
-          '<div class="proj-line"><span>Paid to date</span><span class="num">' + A.fmtMoney(b.totalPaid) + '</span></div>' +
-          '<div class="proj-line"><span>Earned this month</span><span class="num">' + A.fmtMoney(b.thisMonthOwed) + '</span></div>' +
-          '<button class="btn btn-sm" data-wage-statement="' + b.employeeId + '" style="margin-top:9px;width:100%;">🖨 Print statement</button>' +
+          '<div class="head"><span>' + A.esc(b.employeeName) + '</span><span class="wage num" style="' + (b.balanceCarriedForward > 0.005 ? 'color:var(--bad)' : 'color:var(--good)') + '">' + A.fmtMoney(b.balanceCarriedForward) + '</span></div>' +
+          '<div class="proj-line"><span>Balance brought forward</span><span class="num">' + A.fmtMoney(b.balanceBroughtForward) + '</span></div>' +
+          '<div class="proj-line"><span>Earned in ' + A.esc(monthLabel) + '</span><span class="num">+' + A.fmtMoney(b.thisMonthOwed) + '</span></div>' +
+          '<div class="proj-line"><span>Paid in ' + A.esc(monthLabel) + '</span><span class="num">−' + A.fmtMoney(b.thisMonthPaid) + '</span></div>' +
+          '<div class="proj-line" style="font-weight:600;border-top:1px solid var(--line);padding-top:6px;margin-top:4px;"><span>Balance carried forward</span><span class="num">' + A.fmtMoney(b.balanceCarriedForward) + '</span></div>' +
+          '<button class="btn btn-sm" data-wage-statement="' + b.employeeId + '" style="margin-top:9px;width:100%;">🖨 Print ' + A.esc(monthLabel) + ' statement</button>' +
         '</div>'
       )).join("");
       balHost.querySelectorAll("[data-wage-statement]").forEach((btn) => {
-        btn.addEventListener("click", () => printWageStatement(Number(btn.getAttribute("data-wage-statement"))));
+        btn.addEventListener("click", () => printWageStatement(Number(btn.getAttribute("data-wage-statement")), balanceMonth));
       });
     }
 
@@ -138,36 +143,46 @@ window.PaymentsTab = (function () {
     document.getElementById("wageTotalHint").textContent = list.length ? ("Total paid: " + A.fmtMoney(total)) : "";
   }
 
-  async function printWageStatement(employeeId) {
+  function monthLabelOf(month) {
+    const [y, m] = month.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString("en-US", { year: "numeric", month: "long" });
+  }
+
+  async function printWageStatement(employeeId, month) {
     if (!companySettings) companySettings = await A.api("/settings");
-    const [attendance, wagePayments] = await Promise.all([
+    const [attendance, wagePayments, balances] = await Promise.all([
       A.api("/attendance?employeeId=" + employeeId),
-      A.api("/wage-payments?employeeId=" + employeeId)
+      A.api("/wage-payments?employeeId=" + employeeId),
+      A.api("/payroll-balances?month=" + month)
     ]);
     const employee = A.state.employees.find((e) => e.id === employeeId);
+    const bal = balances.find((b) => b.employeeId === employeeId) ||
+      { balanceBroughtForward: 0, balanceCarriedForward: 0 };
 
+    const inMonth = (dateStr) => !!dateStr && dateStr.slice(0, 7) === month;
     const lines = [];
-    attendance.forEach((a) => lines.push({
+    attendance.filter((a) => inMonth(a.workDate)).forEach((a) => lines.push({
       date: a.workDate,
       description: "Worked — " + A.projectName(a.projectId) + " (" + a.days + " d × " + A.fmtMoney(a.rate) + ")",
       amount: a.cost
     }));
-    wagePayments.forEach((p) => lines.push({
+    wagePayments.filter((p) => inMonth(p.paymentDate)).forEach((p) => lines.push({
       date: p.paymentDate,
       description: "Payment" + (p.method ? " — " + p.method : "") + (p.notes ? " (" + p.notes + ")" : ""),
       amount: -(Number(p.amount) || 0)
     }));
     lines.sort((a, b) => a.date.localeCompare(b.date));
 
-    let running = 0;
+    let running = bal.balanceBroughtForward;
     const rowsHtml = lines.map((l) => {
       running += l.amount;
       return '<tr><td class="cat">' + A.esc(A.fmtDate(l.date)) + '</td>' +
         '<td class="desc">' + A.esc(l.description) + '</td>' +
         '<td class="amt num">' + (l.amount >= 0 ? "+" : "") + A.fmtMoney(l.amount) + '</td>' +
         '<td class="amt num">' + A.fmtMoney(running) + '</td></tr>';
-    }).join("") || '<tr><td colspan="4" style="padding:16px 0;color:var(--muted);font-size:12px;">No activity yet.</td></tr>';
+    }).join("") || '<tr><td colspan="4" style="padding:16px 0;color:var(--muted);font-size:12px;">No activity this month.</td></tr>';
 
+    const monthLabel = monthLabelOf(month);
     const c = companySettings;
     const html =
       '<div class="qs-head">' +
@@ -176,13 +191,15 @@ window.PaymentsTab = (function () {
       '</div>' +
       '<div class="qs-meta">' +
         '<div class="col"><p><strong>' + A.esc(c.companyName || "") + '</strong></p><p class="muted">' + A.esc(c.companyAddr1 || "") + '</p><p class="muted">' + A.esc(c.companyAddr2 || "") + '</p></div>' +
-        '<div class="col right"><p><span class="muted">As of:</span> ' + A.esc(A.fmtDate(A.todayISO())) + '</p><p><span class="muted">Employee:</span> ' + A.esc(employee ? employee.name : "") + '</p></div>' +
+        '<div class="col right"><p><span class="muted">For:</span> ' + A.esc(monthLabel) + '</p><p><span class="muted">Employee:</span> ' + A.esc(employee ? employee.name : "") + '</p></div>' +
       '</div>' +
       '<table class="qs-table"><thead><tr><th>Date</th><th>Description</th><th class="amt">Amount</th><th class="amt">Balance</th></tr></thead>' +
-      '<tbody>' + rowsHtml +
-      '<tr class="qs-total-row"><td colspan="3">Balance owed as of today</td><td class="amt num">' + A.fmtMoney(running) + '</td></tr>' +
+      '<tbody>' +
+      '<tr><td class="cat">' + A.esc(A.fmtDate(month + "-01")) + '</td><td class="desc">Balance brought forward</td><td class="amt num"></td><td class="amt num">' + A.fmtMoney(bal.balanceBroughtForward) + '</td></tr>' +
+      rowsHtml +
+      '<tr class="qs-total-row"><td colspan="3">Balance carried forward (end of ' + A.esc(monthLabel) + ')</td><td class="amt num">' + A.fmtMoney(bal.balanceCarriedForward) + '</td></tr>' +
       '</tbody></table>' +
-      '<p class="qs-auth">This statement lists every day worked and every payment made to date. I confirm the entries above are accurate.</p>' +
+      '<p class="qs-auth">This statement lists the balance brought forward plus every day worked and every payment made during ' + A.esc(monthLabel) + '. I confirm the entries above are accurate.</p>' +
       '<div class="qs-sign"><div class="line"><hr class="rule"><div class="cap"><span>' + A.esc(employee ? employee.name : "Employee") + '</span><span>Date</span></div></div>' +
         '<div class="line"><hr class="rule"><div class="cap"><span>' + A.esc((c.companyName || "").replace(/ Inc\.?$/, "")) + '</span><span>Date</span></div></div></div>';
 
