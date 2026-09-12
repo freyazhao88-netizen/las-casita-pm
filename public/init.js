@@ -23,7 +23,8 @@
     document.getElementById("app").hidden = false;
     await A.loadCoreData();
     const savedTab = (function () { try { return localStorage.getItem("lc-active-tab"); } catch (e) { return null; } })();
-    A.switchTab(savedTab || "dashboard");
+    const tabExists = savedTab && document.querySelector('.nav-item[data-tab="' + savedTab + '"]');
+    A.switchTab(tabExists ? savedTab : "dashboard");
   }
 
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
