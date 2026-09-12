@@ -1,6 +1,7 @@
 "use strict";
 const express = require("express");
 const db = require("../db");
+const { computeAllSummaries } = require("../summary");
 
 const router = express.Router();
 
@@ -65,6 +66,55 @@ router.get("/quotes", async (req, res, next) => {
       address: q.address, scope: q.scope, client: q.clientName, status: q.status || "draft",
       total: computeTotal(q.items), updatedAt: q.updatedAt
     })));
+  } catch (e) { next(e); }
+});
+
+// For each project with a signed quote, finds the first payment-schedule step whose
+// cumulative amount isn't yet covered by what the client has actually paid, and
+// surfaces it if it's due within 10 days (or already overdue). Recomputed live from
+// the current quote + payments each time, so edits to either are reflected immediately.
+router.get("/quotes/payment-reminders", async (req, res, next) => {
+  try {
+    const [quotes, projects] = await Promise.all([db.all("quotes"), db.all("projects")]);
+    const summaries = await computeAllSummaries(projects);
+
+    const signedByProject = {};
+    quotes.filter((q) => q.status === "signed" && q.projectId).forEach((q) => {
+      const existing = signedByProject[q.projectId];
+      if (!existing || (q.updatedAt || "") > (existing.updatedAt || "")) signedByProject[q.projectId] = q;
+    });
+
+    const today = new Date().toISOString().slice(0, 10);
+    const reminders = [];
+    Object.values(signedByProject).forEach((q) => {
+      const project = projects.find((p) => p.id === q.projectId);
+      if (!project) return;
+      const received = (summaries[q.projectId] || {}).amountReceived || 0;
+      const steps = (q.paymentSchedule || [])
+        .filter((s) => s.dueDate)
+        .slice()
+        .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+      let cumulative = 0;
+      for (const step of steps) {
+        cumulative += Number(step.amount) || 0;
+        if (cumulative > received + 0.005) {
+          const daysUntil = Math.round((new Date(step.dueDate) - new Date(today)) / 86400000);
+          if (daysUntil <= 10) {
+            reminders.push({
+              projectId: project.id,
+              projectName: project.name,
+              label: step.label || "Payment due",
+              amount: Number(step.amount) || 0,
+              dueDate: step.dueDate,
+              daysUntil
+            });
+          }
+          break;
+        }
+      }
+    });
+    reminders.sort((a, b) => a.daysUntil - b.daysUntil);
+    res.json(reminders);
   } catch (e) { next(e); }
 });
 
