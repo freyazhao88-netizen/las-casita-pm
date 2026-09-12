@@ -2,6 +2,48 @@
 window.MaterialsTab = (function () {
   const A = window.App;
   let bound = false;
+  let pendingReceiptTarget = null;
+
+  function receiptCell(collection, id, hasReceipt) {
+    return hasReceipt
+      ? '<button class="receipt-btn" data-action="view" data-collection="' + collection + '" data-id="' + id + '">📎 View</button>' +
+        '<button class="receipt-btn" data-action="replace" data-collection="' + collection + '" data-id="' + id + '" title="Replace">⟳</button>'
+      : '<button class="receipt-btn" data-action="add" data-collection="' + collection + '" data-id="' + id + '">+ Add</button>';
+  }
+
+  function bindReceiptCell(tbody) {
+    tbody.querySelectorAll(".receipt-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const collection = btn.getAttribute("data-collection");
+        const id = btn.getAttribute("data-id");
+        const action = btn.getAttribute("data-action");
+        if (action === "view") {
+          try {
+            const data = await A.api("/" + collection + "/" + id + "/receipt");
+            window.open(data.url, "_blank");
+          } catch (e) { /* A.api already shows a toast */ }
+        } else {
+          pendingReceiptTarget = { collection, id };
+          document.getElementById(collection === "materials" ? "matReceiptInput" : "expReceiptInput").click();
+        }
+      });
+    });
+  }
+
+  async function handleReceiptFileChosen(e) {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file || !pendingReceiptTarget) return;
+    const { collection, id } = pendingReceiptTarget;
+    pendingReceiptTarget = null;
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/" + collection + "/" + id + "/receipt", { method: "POST", body: fd, credentials: "same-origin" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { A.toast(data.error || "Upload failed"); return; }
+    A.toast("Receipt uploaded");
+    if (collection === "materials") renderMaterials(); else renderExpenses();
+  }
 
   function bindOnce() {
     if (bound) return;
@@ -10,6 +52,9 @@ window.MaterialsTab = (function () {
     document.getElementById("matDate").value = A.todayISO();
     document.getElementById("matProjectFilter").addEventListener("change", renderMaterials);
     document.getElementById("matStatusFilter").addEventListener("change", renderMaterials);
+
+    document.getElementById("matReceiptInput").addEventListener("change", handleReceiptFileChosen);
+    document.getElementById("expReceiptInput").addEventListener("change", handleReceiptFileChosen);
 
     document.getElementById("matMode").addEventListener("change", (e) => {
       const isQty = e.target.value === "qty";
@@ -98,7 +143,7 @@ window.MaterialsTab = (function () {
     const list = await A.api("/materials" + (params.length ? "?" + params.join("&") : ""));
     const tbody = document.querySelector("#matTable tbody");
     if (!list.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No purchases logged yet.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No purchases logged yet.</td></tr>';
     } else {
       tbody.innerHTML = list.map((m) => (
         '<tr>' +
@@ -109,6 +154,7 @@ window.MaterialsTab = (function () {
           '<td>' + A.esc(m.description) + (m.mode === "qty" ? ' <span style="color:var(--muted)">(' + m.qty + ' × ' + A.fmtMoney(m.unitPrice) + ')</span>' : '') + '</td>' +
           '<td class="amt num">' + A.fmtMoney(m.amount) + '</td>' +
           '<td><button class="payment-pill ' + (m.paymentStatus === "paid" ? "paid" : "unpaid") + '" data-id="' + m.id + '">' + (m.paymentStatus === "paid" ? "Paid" : "Unpaid") + (m.paymentMethod ? " · " + A.esc(m.paymentMethod) : "") + '</button></td>' +
+          '<td>' + receiptCell("materials", m.id, !!m.receiptPath) + '</td>' +
           '<td><button class="row-del" data-id="' + m.id + '" title="Delete">✕</button></td>' +
         '</tr>'
       )).join("");
@@ -125,6 +171,7 @@ window.MaterialsTab = (function () {
           renderMaterials();
         });
       });
+      bindReceiptCell(tbody);
     }
     const total = list.reduce((s, m) => s + m.amount, 0);
     const unpaid = list.filter((m) => m.paymentStatus !== "paid").reduce((s, m) => s + m.amount, 0);
@@ -143,7 +190,7 @@ window.MaterialsTab = (function () {
     const list = await A.api("/expenses" + (projectId ? "?projectId=" + projectId : ""));
     const tbody = document.querySelector("#expTable tbody");
     if (!list.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No expenses logged yet.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No expenses logged yet.</td></tr>';
     } else {
       tbody.innerHTML = list.map((e) => (
         '<tr>' +
@@ -154,6 +201,7 @@ window.MaterialsTab = (function () {
           '<td class="amt num">' + A.fmtMoney(e.amount) + '</td>' +
           '<td><button class="payment-pill ' + (e.status === "reimbursed" ? "paid" : "unpaid") + '" data-id="' + e.id + '">' + (e.status === "reimbursed" ? "Reimbursed" : "Unreimbursed") + (e.status === "reimbursed" && e.paymentMethod ? " · " + A.esc(e.paymentMethod) : "") + '</button></td>' +
           '<td>' + A.esc(e.notes) + '</td>' +
+          '<td>' + receiptCell("expenses", e.id, !!e.receiptPath) + '</td>' +
           '<td><button class="row-del" data-id="' + e.id + '" title="Delete">✕</button></td>' +
         '</tr>'
       )).join("");
@@ -170,6 +218,7 @@ window.MaterialsTab = (function () {
           renderExpenses();
         });
       });
+      bindReceiptCell(tbody);
     }
     const total = list.reduce((s, e) => s + e.amount, 0);
     const unreimbursed = list.filter((e) => e.status !== "reimbursed").reduce((s, e) => s + e.amount, 0);
