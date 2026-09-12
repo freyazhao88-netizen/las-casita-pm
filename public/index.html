@@ -9,6 +9,8 @@
 </head>
 <body>
 
+<datalist id="projectNameOptions"></datalist>
+
 <!-- ---------------- Login screen ---------------- -->
 <div id="loginScreen" class="login-screen">
   <form id="loginForm" class="login-card">
@@ -226,7 +228,7 @@
         <div class="card-head"><h3>Log an expense</h3></div>
         <form id="expForm" class="field-grid field-grid-5">
           <div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="expDate" required></div>
-          <div class="field"><label>Project</label><select id="expProject" required></select></div>
+          <div class="field"><label>Project</label><input type="text" id="expProject" list="projectNameOptions" placeholder="Pick or type a project name" required></div>
           <div class="field"><label>Category</label><input type="text" id="expCategory" placeholder="e.g. Postage" list="expCategoryList"><datalist id="expCategoryList"></datalist></div>
           <div class="field"><label>Amount ($)</label><input type="number" id="expAmount" step="0.01" min="0" required></div>
           <div class="field"><label>Status</label><select id="expStatus"><option value="unreimbursed">Unreimbursed</option><option value="reimbursed">Reimbursed</option></select></div>
@@ -434,7 +436,7 @@
         <div class="card-head"><h3>Log a payment</h3></div>
         <form id="payForm" class="field-grid field-grid-5">
           <div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="payDate" required></div>
-          <div class="field"><label>Project</label><select id="payProject" required></select></div>
+          <div class="field"><label>Project</label><input type="text" id="payProject" list="projectNameOptions" placeholder="Pick or type a project name" required></div>
           <div class="field"><label>Amount ($)</label><input type="number" id="payAmount" step="0.01" min="0" required></div>
           <div class="field"><label>Method</label><input type="text" id="payMethod" placeholder="e.g. check, Zelle, card"></div>
           <div class="field"><label>Reference #</label><input type="text" id="payReference" placeholder="optional"></div>
