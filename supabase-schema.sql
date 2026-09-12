@@ -190,3 +190,6 @@ create table if not exists expenses (
 );
 create index if not exists idx_expenses_project on expenses(project_id);
 alter table expenses disable row level security;
+
+-- Payment method for reimbursed expenses (added later)
+alter table expenses add column if not exists payment_method text default '';
