@@ -13,15 +13,17 @@ window.DashboardTab = (function () {
     A.state.projects = projects;
     A.populateProjectSelects();
 
-    const grandLabor = projects.reduce((s, p) => s + p.summary.laborTotal, 0);
-    const grandMaterials = projects.reduce((s, p) => s + p.summary.materialsTotal, 0);
-    const grandQuoted = projects.reduce((s, p) => s + p.summary.quotedTotal, 0);
+    const activeProjects = projects.filter((p) => p.status === "active");
+
+    const grandLabor = activeProjects.reduce((s, p) => s + p.summary.laborTotal, 0);
+    const grandMaterials = activeProjects.reduce((s, p) => s + p.summary.materialsTotal, 0);
+    const grandQuoted = activeProjects.reduce((s, p) => s + p.summary.quotedTotal, 0);
     const grandTotal = grandLabor + grandMaterials;
     const curMaterialTotal = curMat.reduce((s, m) => s + m.amount, 0);
 
-    const nonCompletedIds = new Set(projects.filter((p) => p.status !== "completed").map((p) => p.id));
-    const scheduledCount = allStages.filter((s) => nonCompletedIds.has(s.projectId) && s.status === "scheduled").length;
-    const failedCount = allStages.filter((s) => nonCompletedIds.has(s.projectId) && s.status === "failed").length;
+    const activeIds = new Set(activeProjects.map((p) => p.id));
+    const scheduledCount = allStages.filter((s) => activeIds.has(s.projectId) && s.status === "scheduled").length;
+    const failedCount = allStages.filter((s) => activeIds.has(s.projectId) && s.status === "failed").length;
 
     let stagesNote, stagesTone;
     if (failedCount > 0) { stagesNote = failedCount + " failed inspection" + (failedCount === 1 ? "" : "s"); stagesTone = "warn"; }
@@ -29,7 +31,7 @@ window.DashboardTab = (function () {
     else { stagesNote = "all caught up"; stagesTone = "good"; }
 
     document.getElementById("dashStats").innerHTML = [
-      tile("Active projects", projects.filter((p) => p.status === "active").length, "", "▣", projects.length + " total"),
+      tile("Active projects", activeProjects.length, "", "▣", projects.length + " total"),
       tile("Total labor cost", A.fmtMoney(grandLabor), "", "◷", "this month: " + A.fmtMoney(curAtt.grandTotalWage)),
       tile("Total material cost", A.fmtMoney(grandMaterials), "", "▤", "this month: " + A.fmtMoney(curMaterialTotal)),
       tile("Total spend", A.fmtMoney(grandTotal), "warm", "Σ", "vs. " + A.fmtMoney(grandQuoted) + " quoted"),
@@ -37,10 +39,10 @@ window.DashboardTab = (function () {
     ].join("");
 
     const cardsHost = document.getElementById("dashProjectCards");
-    if (!projects.length) {
-      cardsHost.innerHTML = '<div class="empty-state">No projects yet. Create one in the Projects tab.</div>';
+    if (!activeProjects.length) {
+      cardsHost.innerHTML = '<div class="empty-state">No active projects. Create one, or check On hold / Completed in the Projects tab.</div>';
     } else {
-      cardsHost.innerHTML = projects.map((p) => cardHtml(p)).join("");
+      cardsHost.innerHTML = activeProjects.map((p) => cardHtml(p)).join("");
       cardsHost.querySelectorAll("[data-open-project]").forEach((card) => {
         card.addEventListener("click", () => {
           window.ProjectsTab.selectOnly(Number(card.getAttribute("data-open-project")));
@@ -49,13 +51,14 @@ window.DashboardTab = (function () {
       });
     }
 
-    renderUpcomingInspections(allStages);
+    renderUpcomingInspections(allStages, activeIds);
   }
 
-  function renderUpcomingInspections(allStages) {
+  function renderUpcomingInspections(allStages, activeIds) {
     const host = document.getElementById("dashRecentStages");
-    const failed = allStages.filter((s) => s.status === "failed");
-    const scheduled = allStages.filter((s) => s.status === "scheduled")
+    const stages = allStages.filter((s) => activeIds.has(s.projectId));
+    const failed = stages.filter((s) => s.status === "failed");
+    const scheduled = stages.filter((s) => s.status === "scheduled")
       .sort((a, b) => (a.inspectionDate || "9999").localeCompare(b.inspectionDate || "9999"));
     const upcoming = failed.concat(scheduled).slice(0, 8);
 
