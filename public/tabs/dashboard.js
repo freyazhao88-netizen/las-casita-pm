@@ -93,7 +93,7 @@ window.DashboardTab = (function () {
     const matTotal = unpaidMaterials.reduce((s, m) => s + (Number(m.amount) || 0), 0);
     const expTotal = unpaidExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
     const matRows = unpaidMaterials.slice().sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate)).map((m) => (
-      '<tr><td>' + m.purchaseDate + '</td><td>' + A.esc(A.projectName(m.projectId)) + '</td><td>' + A.esc(m.vendor) + '</td>' +
+      '<tr><td>' + m.purchaseDate + '</td><td>' + A.esc(A.projectNameOf(m)) + '</td><td>' + A.esc(m.vendor) + '</td>' +
       '<td>' + A.esc(m.category) + '</td><td class="amt num">' + A.fmtMoney(m.amount) + '</td></tr>'
     )).join("") || '<tr><td colspan="5" style="color:var(--muted);">No unpaid materials.</td></tr>';
     const expRows = unpaidExpenses.slice().sort((a, b) => b.expenseDate.localeCompare(a.expenseDate)).map((e) => (
@@ -131,10 +131,13 @@ window.DashboardTab = (function () {
   }
 
   function showByProjectDetail(title, entries, amountOf, total) {
-    const byProject = {};
-    entries.forEach((e) => { byProject[e.projectId] = (byProject[e.projectId] || 0) + amountOf(e); });
-    const rows = Object.keys(byProject)
-      .map((pid) => ({ name: A.projectName(pid), amount: byProject[pid] }))
+    const byName = {};
+    entries.forEach((e) => {
+      const name = A.projectNameOf(e);
+      byName[name] = (byName[name] || 0) + amountOf(e);
+    });
+    const rows = Object.keys(byName)
+      .map((name) => ({ name, amount: byName[name] }))
       .sort((a, b) => b.amount - a.amount)
       .map((r) => '<tr><td>' + A.esc(r.name) + '</td><td class="amt num">' + A.fmtMoney(r.amount) + '</td></tr>')
       .join("") || '<tr><td colspan="2" style="color:var(--muted);">Nothing logged this month.</td></tr>';
