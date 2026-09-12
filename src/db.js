@@ -22,7 +22,8 @@ const TABLES = {
   quotes: "quotes",
   changeOrders: "change_orders",
   payments: "payments",
-  wagePayments: "wage_payments"
+  wagePayments: "wage_payments",
+  expenses: "expenses"
 };
 
 const DEFAULT_STAGE_SUGGESTIONS = [
@@ -38,6 +39,11 @@ const CATEGORY_LIBRARY = [
   "Flooring", "Tile", "Cabinets", "Countertop", "Bath Vanities", "Bathroom", "Kitchen",
   "Moulding / Baseboard", "Stair Railing", "Closet / Pantry", "Waterproofing", "Hardware",
   "Driveway / Concrete", "Porch", "Laundry Cabinet"
+];
+
+const EXPENSE_CATEGORY_LIBRARY = [
+  "Postage / Shipping", "Meals", "Permit / Inspection Fee", "Mileage / Travel",
+  "Parking / Tolls", "Office Supplies", "Equipment Rental", "Dump / Disposal Fee"
 ];
 
 function camelToSnake(s) { return s.replace(/[A-Z]/g, (m) => "_" + m.toLowerCase()); }
@@ -157,5 +163,5 @@ module.exports = {
   supabase,
   all, find, insert, update, remove, removeWhere,
   hashPassword, verifyPassword, getSettings, updateSettings,
-  DEFAULT_STAGE_SUGGESTIONS, CATEGORY_LIBRARY
+  DEFAULT_STAGE_SUGGESTIONS, CATEGORY_LIBRARY, EXPENSE_CATEGORY_LIBRARY
 };
