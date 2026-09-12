@@ -6,7 +6,7 @@ window.DashboardTab = (function () {
   function bindOnce() {
     if (bound) return;
     bound = true;
-    document.getElementById("dashMonth").value = A.currentMonth();
+    A.populateMonthSelect(document.getElementById("dashMonth"), 24);
     document.getElementById("dashMonth").addEventListener("change", render);
   }
 
@@ -28,12 +28,13 @@ window.DashboardTab = (function () {
     const activeProjects = projects.filter((p) => p.status === "active");
     const activeIds = new Set(activeProjects.map((p) => p.id));
 
-    const monthLabor = monthAttendance
-      .filter((a) => activeIds.has(a.projectId))
-      .reduce((s, a) => s + (Number(a.days) || 0) * (Number(a.rate) || 0), 0);
-    const monthMaterialTotal = monthMaterials
-      .filter((m) => activeIds.has(m.projectId))
-      .reduce((s, m) => s + (Number(m.amount) || 0), 0);
+    // Deliberately NOT filtered to active projects — "money spent this month" is a cash-flow
+    // question that includes things like warranty repairs billed against a completed project.
+    const monthLabor = monthAttendance.reduce((s, a) => s + (Number(a.days) || 0) * (Number(a.rate) || 0), 0);
+    const monthMaterialTotal = monthMaterials.reduce((s, m) => s + (Number(m.amount) || 0), 0);
+    const monthExpenseTotal = allExpenses
+      .filter((e) => e.expenseDate && e.expenseDate.slice(0, 7) === month)
+      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
     const unpaidMaterials = allMaterials.filter((m) => m.paymentStatus !== "paid");
     const unpaidExpenses = allExpenses.filter((e) => e.status !== "reimbursed");
@@ -53,8 +54,9 @@ window.DashboardTab = (function () {
     const monthLabel = monthLabelOf(month);
     document.getElementById("dashStats").innerHTML = [
       tile("Active projects", activeProjects.length, "", "▣", projects.length + " total"),
-      tile("Labor cost (" + monthLabel + ")", A.fmtMoney(monthLabor), "", "◷", "active projects only"),
-      tile("Material cost (" + monthLabel + ")", A.fmtMoney(monthMaterialTotal), "", "▤", "active projects only"),
+      tile("Labor cost (" + monthLabel + ")", A.fmtMoney(monthLabor), "", "◷", "click for breakdown", "", "labor"),
+      tile("Material cost (" + monthLabel + ")", A.fmtMoney(monthMaterialTotal), "", "▤", "click for breakdown", "", "material"),
+      tile("Other expenses (" + monthLabel + ")", A.fmtMoney(monthExpenseTotal), "", "◈", "incl. warranty / repairs"),
       tile("应付款 Payables", A.fmtMoney(payablesTotal), "warm", "↥", "click for breakdown", "", "payables"),
       tile("应收款 Receivables", A.fmtMoney(receivablesTotal), "warm", "↧", "click for breakdown", "", "receivables"),
       tile("Inspections scheduled", String(scheduledCount), failedCount > 0 ? "warm" : "", "✓", stagesNote, stagesTone)
@@ -64,7 +66,9 @@ window.DashboardTab = (function () {
       el.addEventListener("click", () => {
         const kind = el.getAttribute("data-detail");
         if (kind === "payables") showPayablesDetail(unpaidMaterials, unpaidExpenses, payablesTotal);
-        else showReceivablesDetail(projects, receivablesTotal);
+        else if (kind === "receivables") showReceivablesDetail(projects, receivablesTotal);
+        else if (kind === "labor") showByProjectDetail("Labor cost — " + monthLabel, monthAttendance, (a) => (Number(a.days) || 0) * (Number(a.rate) || 0), monthLabor);
+        else if (kind === "material") showByProjectDetail("Material cost — " + monthLabel, monthMaterials, (m) => Number(m.amount) || 0, monthMaterialTotal);
       });
     });
 
@@ -124,6 +128,23 @@ window.DashboardTab = (function () {
       '<tbody>' + rows + '</tbody></table></div>';
 
     A.showDetailModal("应收款明细 Receivables breakdown", html);
+  }
+
+  function showByProjectDetail(title, entries, amountOf, total) {
+    const byProject = {};
+    entries.forEach((e) => { byProject[e.projectId] = (byProject[e.projectId] || 0) + amountOf(e); });
+    const rows = Object.keys(byProject)
+      .map((pid) => ({ name: A.projectName(pid), amount: byProject[pid] }))
+      .sort((a, b) => b.amount - a.amount)
+      .map((r) => '<tr><td>' + A.esc(r.name) + '</td><td class="amt num">' + A.fmtMoney(r.amount) + '</td></tr>')
+      .join("") || '<tr><td colspan="2" style="color:var(--muted);">Nothing logged this month.</td></tr>';
+
+    const html =
+      '<p style="margin:0 0 14px;font-size:13px;">Total: <strong class="num">' + A.fmtMoney(total) + '</strong></p>' +
+      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Project</th><th>Amount</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+
+    A.showDetailModal(title, html);
   }
 
   function renderOpenTodos(openTodos) {
