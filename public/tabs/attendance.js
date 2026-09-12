@@ -17,22 +17,20 @@ window.AttendanceTab = (function () {
 
     document.getElementById("attDate").value = A.todayISO();
 
-    document.getElementById("attEmployee").addEventListener("change", (e) => {
-      const emp = A.state.employees.find((x) => x.id === Number(e.target.value));
-      if (emp) document.getElementById("attRate").value = emp.defaultDailyRate;
-    });
-
     document.getElementById("attForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const employeeId = document.getElementById("attEmployee").value;
+      const projectId = document.getElementById("attProject").value;
+      if (!employeeId || !projectId) { A.toast("Pick an employee and a project"); return; }
+      const emp = A.state.employees.find((x) => x.id === Number(employeeId));
       const body = {
         workDate: document.getElementById("attDate").value,
-        employeeId: document.getElementById("attEmployee").value,
-        projectId: document.getElementById("attProject").value,
+        employeeId,
+        projectId,
         days: document.getElementById("attDays").value,
-        rate: document.getElementById("attRate").value,
+        rate: emp ? emp.defaultDailyRate : 0,
         notes: document.getElementById("attNotes").value
       };
-      if (!body.employeeId || !body.projectId) { A.toast("Pick an employee and a project"); return; }
       await A.api("/attendance", { method: "POST", body });
       document.getElementById("attNotes").value = "";
       A.toast("Entry added");
@@ -42,9 +40,6 @@ window.AttendanceTab = (function () {
 
   async function render() {
     bindOnce();
-    if (!document.getElementById("attEmployee").value && A.state.employees[0]) {
-      document.getElementById("attRate").value = A.state.employees[0].defaultDailyRate;
-    }
     const month = document.getElementById("attMonth").value || A.currentMonth();
     const dateFilter = document.getElementById("attDateFilter").value;
     const employeeFilter = document.getElementById("attEmployeeFilter").value;
