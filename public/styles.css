@@ -177,6 +177,8 @@ hr{ border:none; border-top:1px solid var(--line); }
 /* ---------- dashboard ---------- */
 .stat-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:22px; }
 .stat-tile{ background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px 18px; box-shadow:var(--shadow); }
+.stat-tile-clickable{ cursor:pointer; }
+.stat-tile-clickable:hover{ border-color:var(--accent); }
 .stat-tile-head{ display:flex; align-items:center; justify-content:space-between; }
 .stat-tile .label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
 .stat-tile .icon{ font-size:15px; color:var(--accent); opacity:.7; }
