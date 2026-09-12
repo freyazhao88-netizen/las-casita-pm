@@ -18,14 +18,17 @@ router.get("/expenses", async (req, res, next) => {
 
 router.post("/expenses", async (req, res, next) => {
   try {
-    const { projectId, expenseDate, category, description, amount, status, paymentMethod, notes } = req.body || {};
-    if (!projectId || !expenseDate || amount === undefined || amount === "") {
-      return res.status(400).json({ error: "projectId, expenseDate, and amount are required" });
+    const { projectId, adhocProjectName, expenseDate, category, description, amount, status, paymentMethod, notes } = req.body || {};
+    if (!expenseDate || amount === undefined || amount === "") {
+      return res.status(400).json({ error: "expenseDate and amount are required" });
     }
-    if (!(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
+    const cleanAdhoc = (adhocProjectName || "").trim();
+    if (!projectId && !cleanAdhoc) return res.status(400).json({ error: "Pick a project or type a one-off job name" });
+    if (projectId && !(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
     const finalStatus = status === "reimbursed" ? "reimbursed" : "unreimbursed";
     const rec = await db.insert("expenses", {
-      projectId: Number(projectId),
+      projectId: projectId ? Number(projectId) : null,
+      adhocProjectName: projectId ? "" : cleanAdhoc,
       expenseDate,
       category: category || "",
       description: description || "",
@@ -43,11 +46,11 @@ router.put("/expenses/:id", async (req, res, next) => {
     const rec = await db.find("expenses", req.params.id);
     if (!rec) return res.status(404).json({ error: "Not found" });
     const patch = {};
-    ["expenseDate", "category", "description", "status", "paymentMethod", "notes"].forEach((k) => {
+    ["expenseDate", "category", "description", "status", "paymentMethod", "notes", "adhocProjectName"].forEach((k) => {
       if (k in req.body) patch[k] = req.body[k];
     });
     if ("amount" in req.body) patch.amount = Number(req.body.amount) || 0;
-    if ("projectId" in req.body) patch.projectId = Number(req.body.projectId);
+    if ("projectId" in req.body) patch.projectId = req.body.projectId ? Number(req.body.projectId) : null;
     res.json(await db.update("expenses", req.params.id, patch));
   } catch (e) { next(e); }
 });
