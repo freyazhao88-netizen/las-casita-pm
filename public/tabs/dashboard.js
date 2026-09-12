@@ -1,13 +1,24 @@
 "use strict";
 window.DashboardTab = (function () {
   const A = window.App;
+  let bound = false;
+
+  function bindOnce() {
+    if (bound) return;
+    bound = true;
+    document.getElementById("dashMonth").value = A.currentMonth();
+    document.getElementById("dashMonth").addEventListener("change", render);
+  }
 
   async function render() {
-    const curMonth = A.currentMonth();
-    const [projects, curAtt, curMat, allStages, openTodos] = await Promise.all([
+    bindOnce();
+    const month = document.getElementById("dashMonth").value || A.currentMonth();
+    const [projects, monthAttendance, monthMaterials, allMaterials, allExpenses, allStages, openTodos] = await Promise.all([
       A.api("/projects?summary=1"),
-      A.api("/attendance/summary?month=" + curMonth),
-      A.api("/materials?month=" + curMonth),
+      A.api("/attendance?month=" + month),
+      A.api("/materials?month=" + month),
+      A.api("/materials"),
+      A.api("/expenses"),
       A.api("/stages"),
       A.api("/site-logs/open-todos")
     ]);
@@ -15,14 +26,22 @@ window.DashboardTab = (function () {
     A.populateProjectSelects();
 
     const activeProjects = projects.filter((p) => p.status === "active");
-
-    const grandLabor = activeProjects.reduce((s, p) => s + p.summary.laborTotal, 0);
-    const grandMaterials = activeProjects.reduce((s, p) => s + p.summary.materialsTotal, 0);
-    const grandQuoted = activeProjects.reduce((s, p) => s + p.summary.quotedTotal, 0);
-    const grandTotal = grandLabor + grandMaterials;
-    const curMaterialTotal = curMat.reduce((s, m) => s + m.amount, 0);
-
     const activeIds = new Set(activeProjects.map((p) => p.id));
+
+    const monthLabor = monthAttendance
+      .filter((a) => activeIds.has(a.projectId))
+      .reduce((s, a) => s + (Number(a.days) || 0) * (Number(a.rate) || 0), 0);
+    const monthMaterialTotal = monthMaterials
+      .filter((m) => activeIds.has(m.projectId))
+      .reduce((s, m) => s + (Number(m.amount) || 0), 0);
+
+    const unpaidMaterials = allMaterials.filter((m) => m.paymentStatus !== "paid");
+    const unpaidExpenses = allExpenses.filter((e) => e.status !== "reimbursed");
+    const payablesTotal = unpaidMaterials.reduce((s, m) => s + (Number(m.amount) || 0), 0)
+      + unpaidExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+    const receivablesTotal = projects.reduce((s, p) => s + p.summary.outstandingBalance, 0);
+
     const scheduledCount = allStages.filter((s) => activeIds.has(s.projectId) && s.status === "scheduled").length;
     const failedCount = allStages.filter((s) => activeIds.has(s.projectId) && s.status === "failed").length;
 
@@ -31,13 +50,23 @@ window.DashboardTab = (function () {
     else if (scheduledCount > 0) { stagesNote = "awaiting inspection"; stagesTone = ""; }
     else { stagesNote = "all caught up"; stagesTone = "good"; }
 
+    const monthLabel = monthLabelOf(month);
     document.getElementById("dashStats").innerHTML = [
       tile("Active projects", activeProjects.length, "", "▣", projects.length + " total"),
-      tile("Total labor cost", A.fmtMoney(grandLabor), "", "◷", "this month: " + A.fmtMoney(curAtt.grandTotalWage)),
-      tile("Total material cost", A.fmtMoney(grandMaterials), "", "▤", "this month: " + A.fmtMoney(curMaterialTotal)),
-      tile("Total spend", A.fmtMoney(grandTotal), "warm", "Σ", "vs. " + A.fmtMoney(grandQuoted) + " quoted"),
+      tile("Labor cost (" + monthLabel + ")", A.fmtMoney(monthLabor), "", "◷", "active projects only"),
+      tile("Material cost (" + monthLabel + ")", A.fmtMoney(monthMaterialTotal), "", "▤", "active projects only"),
+      tile("应付款 Payables", A.fmtMoney(payablesTotal), "warm", "↥", "click for breakdown", "", "payables"),
+      tile("应收款 Receivables", A.fmtMoney(receivablesTotal), "warm", "↧", "click for breakdown", "", "receivables"),
       tile("Inspections scheduled", String(scheduledCount), failedCount > 0 ? "warm" : "", "✓", stagesNote, stagesTone)
     ].join("");
+
+    document.getElementById("dashStats").querySelectorAll("[data-detail]").forEach((el) => {
+      el.addEventListener("click", () => {
+        const kind = el.getAttribute("data-detail");
+        if (kind === "payables") showPayablesDetail(unpaidMaterials, unpaidExpenses, payablesTotal);
+        else showReceivablesDetail(projects, receivablesTotal);
+      });
+    });
 
     const cardsHost = document.getElementById("dashProjectCards");
     if (!activeProjects.length) {
@@ -54,6 +83,47 @@ window.DashboardTab = (function () {
 
     renderUpcomingInspections(allStages, activeIds);
     renderOpenTodos(openTodos);
+  }
+
+  function showPayablesDetail(unpaidMaterials, unpaidExpenses, total) {
+    const matTotal = unpaidMaterials.reduce((s, m) => s + (Number(m.amount) || 0), 0);
+    const expTotal = unpaidExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const matRows = unpaidMaterials.slice().sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate)).map((m) => (
+      '<tr><td>' + m.purchaseDate + '</td><td>' + A.esc(A.projectName(m.projectId)) + '</td><td>' + A.esc(m.vendor) + '</td>' +
+      '<td>' + A.esc(m.category) + '</td><td class="amt num">' + A.fmtMoney(m.amount) + '</td></tr>'
+    )).join("") || '<tr><td colspan="5" style="color:var(--muted);">No unpaid materials.</td></tr>';
+    const expRows = unpaidExpenses.slice().sort((a, b) => b.expenseDate.localeCompare(a.expenseDate)).map((e) => (
+      '<tr><td>' + e.expenseDate + '</td><td>' + A.esc(A.projectName(e.projectId)) + '</td><td>' + A.esc(e.category) + '</td>' +
+      '<td>' + A.esc(e.description) + '</td><td class="amt num">' + A.fmtMoney(e.amount) + '</td></tr>'
+    )).join("") || '<tr><td colspan="5" style="color:var(--muted);">No unreimbursed expenses.</td></tr>';
+
+    const html =
+      '<p style="margin:0 0 14px;font-size:13px;">Total owed: <strong class="num">' + A.fmtMoney(total) + '</strong></p>' +
+      '<h4 style="margin:0 0 8px;font-size:13px;">Unpaid materials — ' + A.fmtMoney(matTotal) + '</h4>' +
+      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Project</th><th>Vendor</th><th>Category</th><th>Amount</th></tr></thead>' +
+      '<tbody>' + matRows + '</tbody></table></div>' +
+      '<h4 style="margin:18px 0 8px;font-size:13px;">Unreimbursed other expenses — ' + A.fmtMoney(expTotal) + '</h4>' +
+      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>' +
+      '<tbody>' + expRows + '</tbody></table></div>';
+
+    A.showDetailModal("应付款明细 Payables breakdown", html);
+  }
+
+  function showReceivablesDetail(projects, total) {
+    const rows = projects.slice()
+      .sort((a, b) => b.summary.outstandingBalance - a.summary.outstandingBalance)
+      .map((p) => (
+        '<tr><td>' + A.esc(p.name) + '</td><td class="amt num">' + A.fmtMoney(p.summary.effectiveQuotedTotal) + '</td>' +
+        '<td class="amt num">' + A.fmtMoney(p.summary.amountReceived) + '</td>' +
+        '<td class="amt num" style="font-weight:600;">' + A.fmtMoney(p.summary.outstandingBalance) + '</td></tr>'
+      )).join("");
+
+    const html =
+      '<p style="margin:0 0 14px;font-size:13px;">Total outstanding: <strong class="num">' + A.fmtMoney(total) + '</strong></p>' +
+      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Project</th><th>Total contract amount</th><th>Received</th><th>Outstanding</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+
+    A.showDetailModal("应收款明细 Receivables breakdown", html);
   }
 
   function renderOpenTodos(openTodos) {
@@ -102,9 +172,14 @@ window.DashboardTab = (function () {
     )).join("");
   }
 
-  function tile(label, value, tone, icon, note, noteTone) {
+  function monthLabelOf(month) {
+    const [y, m] = month.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString("en-US", { year: "numeric", month: "short" });
+  }
+
+  function tile(label, value, tone, icon, note, noteTone, dataDetail) {
     return (
-      '<div class="stat-tile">' +
+      '<div class="stat-tile' + (dataDetail ? " stat-tile-clickable" : "") + '"' + (dataDetail ? ' data-detail="' + dataDetail + '"' : "") + '>' +
         '<div class="stat-tile-head"><span class="label">' + A.esc(label) + '</span><span class="icon">' + icon + '</span></div>' +
         '<div class="value ' + (tone || "") + '">' + value + '</div>' +
         (note ? '<div class="note ' + (noteTone || "") + '">' + A.esc(note) + '</div>' : "") +
