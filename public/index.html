@@ -199,9 +199,10 @@
       <div class="card">
         <div class="card-head"><h3>Purchases</h3><span class="hint" id="matTotalHint"></span></div>
         <div class="table-wrap"><table class="data-table" id="matTable"><thead><tr>
-          <th>Date</th><th>Project</th><th>Vendor</th><th>Category</th><th>Description</th><th>Amount</th><th>Payment</th><th></th>
+          <th>Date</th><th>Project</th><th>Vendor</th><th>Category</th><th>Description</th><th>Amount</th><th>Payment</th><th>Receipt</th><th></th>
         </tr></thead><tbody></tbody></table></div>
       </div>
+      <input type="file" id="matReceiptInput" accept="image/*,application/pdf" hidden>
 
       <h3 class="section-divider">Other expenses 其它花费</h3>
       <div class="head-controls" style="margin-bottom:14px;">
@@ -228,9 +229,10 @@
       <div class="card">
         <div class="card-head"><h3>Expenses</h3><span class="hint" id="expTotalHint"></span></div>
         <div class="table-wrap"><table class="data-table" id="expTable"><thead><tr>
-          <th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th><th>Status</th><th>Notes</th><th></th>
+          <th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th><th>Status</th><th>Notes</th><th>Receipt</th><th></th>
         </tr></thead><tbody></tbody></table></div>
       </div>
+      <input type="file" id="expReceiptInput" accept="image/*,application/pdf" hidden>
     </section>
 
     <!-- ===================== Employees ===================== -->
@@ -459,6 +461,14 @@
       <div class="field"><label>New password</label><input type="password" id="pwNew" minlength="4" required></div>
       <div class="field span-2"><button class="btn btn-sm" type="submit">Change password</button><span class="pw-msg" id="pwMsg"></span></div>
     </form>
+    <hr class="modal-rule">
+    <div class="field-grid">
+      <div class="field span-2">
+        <label>Export all data 导出全部数据</label>
+        <p class="hint" style="margin:0 0 8px;">Downloads every project, employee, attendance, material, expense, payment, change order, and quote as one Excel file — for backup or for your accountant.</p>
+        <button class="btn btn-sm" type="button" id="btnExportAll">📥 Export all data (Excel)</button>
+      </div>
+    </div>
   </div>
 </div>
 
