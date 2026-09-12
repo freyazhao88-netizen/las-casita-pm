@@ -42,7 +42,6 @@
       <div class="nav-label">Cost &amp; crew 成本与人工</div>
       <button class="nav-item" data-tab="attendance" data-title="Attendance &amp; payroll 考勤与工资"><span class="nav-icon">◷</span><span>Attendance 考勤</span></button>
       <button class="nav-item" data-tab="materials" data-title="Materials &amp; expenses 材料与花费"><span class="nav-icon">▤</span><span>Materials 材料</span></button>
-      <button class="nav-item" data-tab="employees" data-title="Employees 员工"><span class="nav-icon">☺</span><span>Employees 员工</span></button>
       <div class="nav-label">Delivery 交付</div>
       <button class="nav-item" data-tab="sitelogs" data-title="Site Logs 工地日志"><span class="nav-icon">📋</span><span>Site Logs 工地日志</span></button>
       <button class="nav-item" data-tab="stages" data-title="Inspections &amp; stage acceptance 验收与阶段确认"><span class="nav-icon">✓</span><span>Inspections 验收</span></button>
@@ -168,6 +167,27 @@
           <div id="attSummary"></div>
         </div>
       </div>
+
+      <details class="card" style="margin-top:20px;">
+        <summary style="cursor:pointer;font-weight:700;font-size:14px;">Employees 员工 — roster &amp; rates</summary>
+        <div style="margin-top:16px;">
+          <div class="card-head"><h3>Add employee</h3></div>
+          <form id="empForm" class="field-grid field-grid-3">
+            <div class="field"><label>Name</label><input type="text" id="empName" required></div>
+            <div class="field"><label>Default day rate ($)</label><input type="number" id="empRate" step="0.01" min="0" required></div>
+            <div class="field"><label>SSN</label><input type="text" id="empSsn" placeholder="optional"></div>
+            <div class="field"><label>ID number</label><input type="text" id="empIdNumber" placeholder="optional"></div>
+            <div class="field span-2"><label>Notes</label><input type="text" id="empNotes" placeholder="optional"></div>
+            <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add employee</button></div>
+          </form>
+        </div>
+        <div style="margin-top:20px;">
+          <div class="card-head"><h3>Roster</h3><span class="hint">SSN / ID are hidden by default — click "show" to reveal</span></div>
+          <div class="table-wrap"><table class="data-table" id="empTable"><thead><tr>
+            <th>Name</th><th>Default day rate</th><th>SSN</th><th>ID number</th><th>Notes</th><th>Active</th><th></th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+      </details>
     </section>
 
     <!-- ===================== Materials ===================== -->
@@ -246,30 +266,6 @@
         </tr></thead><tbody></tbody></table></div>
       </div>
       <input type="file" id="expReceiptInput" accept="image/*,application/pdf" hidden>
-    </section>
-
-    <!-- ===================== Employees ===================== -->
-    <section class="tab-panel" id="panel-employees">
-      <div class="panel-head">
-        <h2>Employees 员工</h2>
-      </div>
-      <div class="card">
-        <div class="card-head"><h3>Add employee</h3></div>
-        <form id="empForm" class="field-grid field-grid-3">
-          <div class="field"><label>Name</label><input type="text" id="empName" required></div>
-          <div class="field"><label>Default day rate ($)</label><input type="number" id="empRate" step="0.01" min="0" required></div>
-          <div class="field"><label>SSN</label><input type="text" id="empSsn" placeholder="optional"></div>
-          <div class="field"><label>ID number</label><input type="text" id="empIdNumber" placeholder="optional"></div>
-          <div class="field span-2"><label>Notes</label><input type="text" id="empNotes" placeholder="optional"></div>
-          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add employee</button></div>
-        </form>
-      </div>
-      <div class="card">
-        <div class="card-head"><h3>Roster</h3><span class="hint">SSN / ID are hidden by default — click "show" to reveal</span></div>
-        <div class="table-wrap"><table class="data-table" id="empTable"><thead><tr>
-          <th>Name</th><th>Default day rate</th><th>SSN</th><th>ID number</th><th>Notes</th><th>Active</th><th></th>
-        </tr></thead><tbody></tbody></table></div>
-      </div>
     </section>
 
     <!-- ===================== Site Logs ===================== -->
