@@ -17,6 +17,8 @@ const changeOrderRoutes = require("./src/routes/changeOrders");
 const paymentRoutes = require("./src/routes/payments");
 const wagePaymentRoutes = require("./src/routes/wagePayments");
 const expenseRoutes = require("./src/routes/expenses");
+const exportRoutes = require("./src/routes/export");
+const db = require("./src/db");
 
 const app = express();
 const PORT = process.env.PORT || 4173;
@@ -66,6 +68,7 @@ app.use("/api", changeOrderRoutes);
 app.use("/api", paymentRoutes);
 app.use("/api", wagePaymentRoutes);
 app.use("/api", expenseRoutes);
+app.use("/api", exportRoutes);
 
 app.use("/api", (err, req, res, next) => {
   console.error(err);
@@ -80,3 +83,5 @@ app.get("*", (req, res) => {
 app.listen(PORT, () => {
   console.log("Las Casita PM app running at http://localhost:" + PORT);
 });
+
+db.ensureReceiptsBucket();
