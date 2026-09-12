@@ -231,3 +231,11 @@ create table if not exists warranties (
 );
 create index if not exists idx_warranties_project on warranties(project_id);
 alter table warranties disable row level security;
+
+-- Let "Other expenses" and "Client payments" reference either a real project or a
+-- typed one-off job name (small one-time repairs that don't warrant a full project
+-- record). Exactly one of project_id / adhoc_project_name should be set.
+alter table expenses alter column project_id drop not null;
+alter table expenses add column if not exists adhoc_project_name text;
+alter table payments alter column project_id drop not null;
+alter table payments add column if not exists adhoc_project_name text;
