@@ -107,6 +107,25 @@ window.App = (function () {
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
+  // Safari has never supported <input type="month"> (it silently falls back to a
+  // plain text box with no picker), so month pickers use a plain <select> instead —
+  // works identically everywhere. Populates the most recent `monthsBack` months,
+  // newest first, and selects the current month by default.
+  function populateMonthSelect(select, monthsBack) {
+    if (!select || select.dataset.populated) return;
+    select.dataset.populated = "1";
+    const now = new Date();
+    const options = [];
+    for (let i = 0; i < (monthsBack || 24); i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const value = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      const label = d.toLocaleDateString("en-US", { year: "numeric", month: "long" });
+      options.push('<option value="' + value + '">' + label + '</option>');
+    }
+    select.innerHTML = options.join("");
+    select.value = currentMonth();
+  }
+
   async function loadCoreData() {
     const [employees, projects] = await Promise.all([
       api("/employees"),
@@ -185,7 +204,7 @@ window.App = (function () {
   }
 
   return {
-    fmtMoney, fmtDate, esc, toast, api, currentMonth, todayISO,
+    fmtMoney, fmtDate, esc, toast, api, currentMonth, todayISO, populateMonthSelect,
     state, loadCoreData, populateSelect, populateProjectSelects,
     projectName, employeeName, switchTab, showPrintSheet, showDetailModal
   };
