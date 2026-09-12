@@ -239,3 +239,7 @@ alter table expenses alter column project_id drop not null;
 alter table expenses add column if not exists adhoc_project_name text;
 alter table payments alter column project_id drop not null;
 alter table payments add column if not exists adhoc_project_name text;
+
+-- Same for material purchases.
+alter table materials alter column project_id drop not null;
+alter table materials add column if not exists adhoc_project_name text;
