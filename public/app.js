@@ -133,6 +133,8 @@ window.App = (function () {
     populateSelect(document.getElementById("coProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
     populateSelect(document.getElementById("payProject"), active, (p) => p.id, (p) => p.name);
     populateSelect(document.getElementById("payProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
+    populateSelect(document.getElementById("expProject"), active, (p) => p.id, (p) => p.name);
+    populateSelect(document.getElementById("expProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
   }
 
   function projectName(id) {
