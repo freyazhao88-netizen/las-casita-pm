@@ -59,6 +59,7 @@ window.AttendanceTab = (function () {
     ]);
     renderTable(entries);
     renderSummary(summary);
+    if (window.EmployeesTab) window.EmployeesTab.render();
   }
 
   function renderTable(entries) {
