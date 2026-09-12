@@ -65,9 +65,10 @@ window.MaterialsTab = (function () {
 
     document.getElementById("matForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const body = {
+      const projectInput = A.resolveProjectInput(document.getElementById("matProject").value);
+      if (!projectInput.projectId && !projectInput.adhocProjectName) { A.toast("Pick or type a project"); return; }
+      const body = Object.assign({
         purchaseDate: document.getElementById("matDate").value,
-        projectId: document.getElementById("matProject").value,
         vendor: document.getElementById("matVendor").value,
         category: document.getElementById("matCategory").value,
         description: document.getElementById("matDescription").value,
@@ -78,9 +79,9 @@ window.MaterialsTab = (function () {
         paymentStatus: document.getElementById("matPaymentStatus").value,
         paymentMethod: document.getElementById("matPaymentMethod").value,
         invoiceNumber: document.getElementById("matInvoice").value
-      };
-      if (!body.projectId) { A.toast("Pick a project"); return; }
+      }, projectInput);
       await A.api("/materials", { method: "POST", body });
+      document.getElementById("matProject").value = "";
       document.getElementById("matVendor").value = "";
       document.getElementById("matCategory").value = "";
       document.getElementById("matDescription").value = "";
@@ -149,7 +150,7 @@ window.MaterialsTab = (function () {
       tbody.innerHTML = list.map((m) => (
         '<tr>' +
           '<td>' + m.purchaseDate + '</td>' +
-          '<td>' + A.esc(A.projectName(m.projectId)) + '</td>' +
+          '<td>' + A.esc(A.projectNameOf(m)) + '</td>' +
           '<td>' + A.esc(m.vendor) + '</td>' +
           '<td>' + A.esc(m.category) + '</td>' +
           '<td>' + A.esc(m.description) + (m.mode === "qty" ? ' <span style="color:var(--muted)">(' + m.qty + ' × ' + A.fmtMoney(m.unitPrice) + ')</span>' : '') + '</td>' +
@@ -200,7 +201,7 @@ window.MaterialsTab = (function () {
           '<td>' + A.esc(e.category) + '</td>' +
           '<td>' + A.esc(e.description) + '</td>' +
           '<td class="amt num">' + A.fmtMoney(e.amount) + '</td>' +
-          '<td><button class="payment-pill ' + (e.status === "reimbursed" ? "paid" : "unpaid") + '" data-id="' + e.id + '">' + (e.status === "reimbursed" ? "Reimbursed" : "Unreimbursed") + (e.status === "reimbursed" && e.paymentMethod ? " · " + A.esc(e.paymentMethod) : "") + '</button></td>' +
+          '<td><button class="payment-pill ' + (e.status === "reimbursed" ? "paid" : "unpaid") + '" data-id="' + e.id + '">' + (e.status === "reimbursed" ? "Paid" : "Unpaid") + (e.status === "reimbursed" && e.paymentMethod ? " · " + A.esc(e.paymentMethod) : "") + '</button></td>' +
           '<td>' + A.esc(e.notes) + '</td>' +
           '<td>' + receiptCell("expenses", e.id, !!e.receiptPath) + '</td>' +
           '<td><button class="row-del" data-id="' + e.id + '" title="Delete">✕</button></td>' +
@@ -224,7 +225,7 @@ window.MaterialsTab = (function () {
     const total = list.reduce((s, e) => s + e.amount, 0);
     const unreimbursed = list.filter((e) => e.status !== "reimbursed").reduce((s, e) => s + e.amount, 0);
     document.getElementById("expTotalHint").textContent = list.length
-      ? ("Total: " + A.fmtMoney(total) + (unreimbursed > 0.005 ? "  ·  Unreimbursed: " + A.fmtMoney(unreimbursed) : ""))
+      ? ("Total: " + A.fmtMoney(total) + (unreimbursed > 0.005 ? "  ·  Unpaid: " + A.fmtMoney(unreimbursed) : ""))
       : "";
   }
 
