@@ -121,7 +121,7 @@ router.get("/export/all", async (req, res, next) => {
         { header: "Has receipt", key: "hasReceipt", width: 12 }
       ],
       materials.map((m) => ({
-        purchaseDate: m.purchaseDate, projectName: projectName(m.projectId), vendor: m.vendor,
+        purchaseDate: m.purchaseDate, projectName: m.projectId ? projectName(m.projectId) : m.adhocProjectName, vendor: m.vendor,
         category: m.category, description: m.description, qty: m.qty, unitPrice: m.unitPrice,
         amount: Number(m.amount) || 0, paymentStatus: m.paymentStatus, paymentMethod: m.paymentMethod,
         invoiceNumber: m.invoiceNumber, hasReceipt: m.receiptPath ? "Yes" : "No"
