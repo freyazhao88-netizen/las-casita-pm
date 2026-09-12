@@ -12,6 +12,10 @@ window.AttendanceTab = (function () {
     monthInput.value = A.currentMonth();
     monthInput.addEventListener("change", render);
 
+    document.getElementById("attDateFilter").addEventListener("change", render);
+    document.getElementById("attEmployeeFilter").addEventListener("change", render);
+    document.getElementById("attProjectFilter").addEventListener("change", render);
+
     document.getElementById("attDate").value = A.todayISO();
 
     document.getElementById("attEmployee").addEventListener("change", (e) => {
@@ -43,8 +47,15 @@ window.AttendanceTab = (function () {
       document.getElementById("attRate").value = A.state.employees[0].defaultDailyRate;
     }
     const month = document.getElementById("attMonth").value || A.currentMonth();
+    const dateFilter = document.getElementById("attDateFilter").value;
+    const employeeFilter = document.getElementById("attEmployeeFilter").value;
+    const projectFilter = document.getElementById("attProjectFilter").value;
+    const params = ["month=" + month];
+    if (dateFilter) params.push("date=" + dateFilter);
+    if (employeeFilter) params.push("employeeId=" + employeeFilter);
+    if (projectFilter) params.push("projectId=" + projectFilter);
     const [entries, summary] = await Promise.all([
-      A.api("/attendance?month=" + month),
+      A.api("/attendance?" + params.join("&")),
       A.api("/attendance/summary?month=" + month)
     ]);
     renderTable(entries);
