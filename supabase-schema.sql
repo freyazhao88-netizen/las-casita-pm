@@ -193,3 +193,9 @@ alter table expenses disable row level security;
 
 -- Payment method for reimbursed expenses (added later)
 alter table expenses add column if not exists payment_method text default '';
+
+-- Receipt photo/file attachments for materials and other expenses (added later)
+-- Files themselves live in the Supabase Storage bucket "receipts"; this column
+-- just stores that file's storage path.
+alter table materials add column if not exists receipt_path text;
+alter table expenses add column if not exists receipt_path text;
