@@ -137,6 +137,8 @@ window.App = (function () {
     populateSelect(document.getElementById("payProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
     populateSelect(document.getElementById("expProject"), active, (p) => p.id, (p) => p.name);
     populateSelect(document.getElementById("expProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
+    populateSelect(document.getElementById("slgProject"), active, (p) => p.id, (p) => p.name);
+    populateSelect(document.getElementById("slgProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
   }
 
   function projectName(id) {
@@ -160,6 +162,7 @@ window.App = (function () {
     if (window.AttendanceTab && name === "attendance") window.AttendanceTab.render();
     if (window.MaterialsTab && name === "materials") window.MaterialsTab.render();
     if (window.EmployeesTab && name === "employees") window.EmployeesTab.render();
+    if (window.SiteLogsTab && name === "sitelogs") window.SiteLogsTab.render();
     if (window.StagesTab && name === "stages") window.StagesTab.render();
     if (window.ChangeOrdersTab && name === "changeorders") window.ChangeOrdersTab.render();
     if (window.PaymentsTab && name === "payments") window.PaymentsTab.render();
