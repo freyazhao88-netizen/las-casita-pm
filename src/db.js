@@ -23,7 +23,8 @@ const TABLES = {
   changeOrders: "change_orders",
   payments: "payments",
   wagePayments: "wage_payments",
-  expenses: "expenses"
+  expenses: "expenses",
+  siteLogs: "site_logs"
 };
 
 const DEFAULT_STAGE_SUGGESTIONS = [
