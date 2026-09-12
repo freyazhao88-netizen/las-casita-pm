@@ -7,10 +7,11 @@ const router = express.Router();
 
 router.get("/expenses", async (req, res, next) => {
   try {
-    const { projectId, month } = req.query;
+    const { projectId, month, status } = req.query;
     let list = await db.all("expenses");
     if (projectId) list = list.filter((e) => e.projectId === Number(projectId));
     if (month) list = list.filter((e) => e.expenseDate && e.expenseDate.slice(0, 7) === month);
+    if (status) list = list.filter((e) => e.status === status);
     list.sort((a, b) => b.expenseDate.localeCompare(a.expenseDate));
     res.json(list);
   } catch (e) { next(e); }
