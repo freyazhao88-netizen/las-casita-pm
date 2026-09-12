@@ -149,6 +149,9 @@ hr{ border:none; border-top:1px solid var(--line); }
 .row-del{ border:none; background:none; color:var(--muted); font-size:13px; padding:2px 6px; cursor:pointer; }
 .row-del:hover{ color:var(--bad); }
 
+.receipt-btn{ border:none; background:none; color:var(--accent); font-size:11.5px; font-weight:600; padding:2px 4px; cursor:pointer; }
+.receipt-btn:hover{ text-decoration:underline; }
+
 .masked-field{ display:flex; align-items:center; gap:7px; }
 .masked-field .masked-input{ display:none; border:1px solid var(--line); border-radius:4px; padding:4px 6px; font-size:12.5px; width:120px; background:var(--surface); }
 .masked-field.revealed .masked-display{ display:none; }
