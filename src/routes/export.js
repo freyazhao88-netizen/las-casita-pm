@@ -141,7 +141,7 @@ router.get("/export/all", async (req, res, next) => {
         { header: "Has receipt", key: "hasReceipt", width: 12 }
       ],
       expenses.map((e) => ({
-        expenseDate: e.expenseDate, projectName: projectName(e.projectId), category: e.category,
+        expenseDate: e.expenseDate, projectName: e.projectId ? projectName(e.projectId) : e.adhocProjectName, category: e.category,
         description: e.description, amount: Number(e.amount) || 0, status: e.status,
         paymentMethod: e.paymentMethod, notes: e.notes, hasReceipt: e.receiptPath ? "Yes" : "No"
       }))
@@ -157,7 +157,7 @@ router.get("/export/all", async (req, res, next) => {
         { header: "Notes", key: "notes", width: 26 }
       ],
       payments.map((p) => ({
-        paymentDate: p.paymentDate, projectName: projectName(p.projectId), amount: Number(p.amount) || 0,
+        paymentDate: p.paymentDate, projectName: p.projectId ? projectName(p.projectId) : p.adhocProjectName, amount: Number(p.amount) || 0,
         method: p.method, reference: p.reference, notes: p.notes
       }))
     );
