@@ -208,7 +208,6 @@ window.App = (function () {
     if (window.ProjectsTab && name === "projects") window.ProjectsTab.render();
     if (window.AttendanceTab && name === "attendance") window.AttendanceTab.render();
     if (window.MaterialsTab && name === "materials") window.MaterialsTab.render();
-    if (window.EmployeesTab && name === "employees") window.EmployeesTab.render();
     if (window.SiteLogsTab && name === "sitelogs") window.SiteLogsTab.render();
     if (window.StagesTab && name === "stages") window.StagesTab.render();
     if (window.ChangeOrdersTab && name === "changeorders") window.ChangeOrdersTab.render();
