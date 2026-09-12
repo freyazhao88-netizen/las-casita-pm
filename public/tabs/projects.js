@@ -64,9 +64,12 @@ window.ProjectsTab = (function () {
       detailHost.innerHTML = '<div class="empty-state">Select a project on the left, or create a new one.</div>';
       return;
     }
-    let stages;
+    let stages, warranties;
     try {
-      stages = await A.api("/projects/" + project.id + "/stages");
+      [stages, warranties] = await Promise.all([
+        A.api("/projects/" + project.id + "/stages"),
+        A.api("/warranties?projectId=" + project.id)
+      ]);
     } catch (e) {
       if (myToken !== renderToken) return;
       detailHost.innerHTML = '<div class="empty-state">Couldn\'t load this project.<br><button class="btn btn-sm" id="btnRetryDetail" style="margin-top:8px;">Retry</button></div>';
@@ -75,8 +78,8 @@ window.ProjectsTab = (function () {
       return;
     }
     if (myToken !== renderToken) return;
-    detailHost.innerHTML = detailHtml(project, stages);
-    bindDetail(project, stages);
+    detailHost.innerHTML = detailHtml(project, stages, warranties);
+    bindDetail(project, stages, warranties);
   }
 
   function selectAndOpen(id) { selectedId = id; creating = false; render(); }
@@ -126,7 +129,7 @@ window.ProjectsTab = (function () {
     });
   }
 
-  function detailHtml(p, stages) {
+  function detailHtml(p, stages, warranties) {
     const s = p.summary;
     return (
       '<div class="detail-header">' +
@@ -171,6 +174,44 @@ window.ProjectsTab = (function () {
         '<div class="card-head"><h3>Inspections</h3><span class="hint">' + stages.length + ' logged for this project</span></div>' +
         (stages.length ? summaryLine(stages) : '<div class="empty-state">No inspections logged yet for this project.</div>') +
         '<button class="btn btn-sm" id="btnViewInspections" type="button" style="margin-top:12px;">View / add inspections →</button>' +
+      '</div>' +
+
+      '<div class="card">' +
+        '<div class="card-head"><h3>Warranty coverage 保修信息</h3><span class="hint">' + warranties.length + ' on file</span></div>' +
+        '<div id="warrantyList">' + (warranties.length ? warranties.map(warrantyLine).join("") : '<div class="empty-state">No warranty info logged yet.</div>') + '</div>' +
+        '<form id="warrantyForm" class="field-grid field-grid-3" style="margin-top:14px;">' +
+          '<div class="field"><label>Item</label><input type="text" id="wtyItem" placeholder="e.g. Plumbing" required></div>' +
+          '<div class="field"><label>Provider</label><input type="text" id="wtyProvider" placeholder="e.g. ABC Plumbing"></div>' +
+          '<div class="field"><label>Contact</label><input type="text" id="wtyContact" placeholder="phone / email"></div>' +
+          '<div class="field"><label>Start date</label><input type="date" min="1970-01-01" max="2099-12-31" id="wtyStart"></div>' +
+          '<div class="field"><label>Expiration date</label><input type="date" min="1970-01-01" max="2099-12-31" id="wtyExpire"></div>' +
+          '<div class="field"><label>Notes</label><input type="text" id="wtyNotes" placeholder="optional"></div>' +
+          '<div class="field span-full"><button class="btn btn-sm" type="submit">+ Add warranty</button></div>' +
+        '</form>' +
+      '</div>'
+    );
+  }
+
+  function warrantyLine(w) {
+    const today = A.todayISO();
+    const isExpired = w.expirationDate && w.expirationDate < today;
+    const badge = w.expirationDate
+      ? '<span class="badge ' + (isExpired ? "failed" : "passed") + '">' + (isExpired ? "Expired" : "Active") + '</span>'
+      : "";
+    const meta = [
+      w.providerName,
+      w.providerContact,
+      w.startDate ? "from " + A.fmtDate(w.startDate) : "",
+      w.expirationDate ? "exp. " + A.fmtDate(w.expirationDate) : ""
+    ].filter(Boolean).join(" · ");
+    return (
+      '<div class="proj-line" style="align-items:flex-start;padding:8px 0;">' +
+        '<span>' +
+          '<strong>' + A.esc(w.item) + '</strong> ' + badge + '<br>' +
+          '<small style="color:var(--muted);">' + A.esc(meta) + '</small>' +
+          (w.notes ? '<br><small style="color:var(--muted);">' + A.esc(w.notes) + '</small>' : "") +
+        '</span>' +
+        '<button class="row-del" data-warranty-id="' + w.id + '" title="Delete">✕</button>' +
       '</div>'
     );
   }
@@ -192,7 +233,7 @@ window.ProjectsTab = (function () {
     return '<div class="tile"><div class="label">' + A.esc(label) + '</div><div class="value num">' + value + '</div></div>';
   }
 
-  function bindDetail(p, stages) {
+  function bindDetail(p, stages, warranties) {
     document.getElementById("btnDeleteProject").addEventListener("click", async () => {
       if (!confirm('Delete project "' + p.name + '" and all its attendance, materials, stages, and quotes? This cannot be undone.')) return;
       await A.api("/projects/" + p.id, { method: "DELETE" });
@@ -220,6 +261,28 @@ window.ProjectsTab = (function () {
     document.getElementById("btnViewInspections").addEventListener("click", () => {
       window.StagesTab.filterToProject(p.id);
       A.switchTab("stages");
+    });
+
+    document.getElementById("warrantyForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await A.api("/warranties", { method: "POST", body: {
+        projectId: p.id,
+        item: document.getElementById("wtyItem").value,
+        providerName: document.getElementById("wtyProvider").value,
+        providerContact: document.getElementById("wtyContact").value,
+        startDate: document.getElementById("wtyStart").value,
+        expirationDate: document.getElementById("wtyExpire").value,
+        notes: document.getElementById("wtyNotes").value
+      }});
+      A.toast("Warranty added");
+      render();
+    });
+
+    document.querySelectorAll("[data-warranty-id]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        await A.api("/warranties/" + btn.getAttribute("data-warranty-id"), { method: "DELETE" });
+        render();
+      });
     });
   }
 
