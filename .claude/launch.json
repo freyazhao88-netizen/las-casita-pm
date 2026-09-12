@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lascasita",
+      "runtimeExecutable": "/Users/freyazhao/Downloads/Las castia/app/.tools/node-v20.20.2-darwin-arm64/bin/node",
+      "runtimeArgs": ["server.js"],
+      "port": 4173
+    }
+  ]
+}
