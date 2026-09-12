@@ -8,9 +8,8 @@ window.AttendanceTab = (function () {
     if (bound) return;
     bound = true;
 
-    const monthInput = document.getElementById("attMonth");
-    monthInput.value = A.currentMonth();
-    monthInput.addEventListener("change", render);
+    A.populateMonthSelect(document.getElementById("attMonth"), 24);
+    document.getElementById("attMonth").addEventListener("change", render);
 
     document.getElementById("attDateFilter").addEventListener("change", render);
     document.getElementById("attEmployeeFilter").addEventListener("change", render);
