@@ -137,6 +137,7 @@ window.ProjectsTab = (function () {
       '<div class="detail-totals">' +
         tile("Labor cost", A.fmtMoney(s.laborTotal)) +
         tile("Material cost", A.fmtMoney(s.materialsTotal)) +
+        tile("Other expenses", A.fmtMoney(s.otherExpensesTotal)) +
         tile("Total spend", A.fmtMoney(s.grandTotal)) +
         tile("Quote / Contract total", A.fmtMoney(s.quotedTotal)) +
         tile("Change orders", (s.approvedChangeOrdersTotal >= 0 ? "+" : "") + A.fmtMoney(s.approvedChangeOrdersTotal)) +
