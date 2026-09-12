@@ -51,6 +51,10 @@ window.MaterialsTab = (function () {
     document.getElementById("expDate").value = A.todayISO();
     document.getElementById("expProjectFilter").addEventListener("change", renderExpenses);
 
+    document.getElementById("expStatus").addEventListener("change", (e) => {
+      document.getElementById("expPaymentMethodField").hidden = e.target.value !== "reimbursed";
+    });
+
     document.getElementById("expForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const body = {
@@ -60,6 +64,7 @@ window.MaterialsTab = (function () {
         description: document.getElementById("expDescription").value,
         amount: document.getElementById("expAmount").value,
         status: document.getElementById("expStatus").value,
+        paymentMethod: document.getElementById("expPaymentMethod").value,
         notes: document.getElementById("expNotes").value
       };
       if (!body.projectId) { A.toast("Pick a project"); return; }
@@ -67,6 +72,7 @@ window.MaterialsTab = (function () {
       document.getElementById("expCategory").value = "";
       document.getElementById("expDescription").value = "";
       document.getElementById("expAmount").value = "";
+      document.getElementById("expPaymentMethod").value = "";
       document.getElementById("expNotes").value = "";
       A.toast("Expense logged");
       renderExpenses();
@@ -146,7 +152,7 @@ window.MaterialsTab = (function () {
           '<td>' + A.esc(e.category) + '</td>' +
           '<td>' + A.esc(e.description) + '</td>' +
           '<td class="amt num">' + A.fmtMoney(e.amount) + '</td>' +
-          '<td><button class="payment-pill ' + (e.status === "reimbursed" ? "paid" : "unpaid") + '" data-id="' + e.id + '">' + (e.status === "reimbursed" ? "Reimbursed" : "Unreimbursed") + '</button></td>' +
+          '<td><button class="payment-pill ' + (e.status === "reimbursed" ? "paid" : "unpaid") + '" data-id="' + e.id + '">' + (e.status === "reimbursed" ? "Reimbursed" : "Unreimbursed") + (e.status === "reimbursed" && e.paymentMethod ? " · " + A.esc(e.paymentMethod) : "") + '</button></td>' +
           '<td>' + A.esc(e.notes) + '</td>' +
           '<td><button class="row-del" data-id="' + e.id + '" title="Delete">✕</button></td>' +
         '</tr>'
