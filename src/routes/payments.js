@@ -16,13 +16,16 @@ router.get("/payments", async (req, res, next) => {
 
 router.post("/payments", async (req, res, next) => {
   try {
-    const { projectId, paymentDate, amount, method, reference, notes } = req.body || {};
-    if (!projectId || !paymentDate || amount === undefined || amount === "") {
-      return res.status(400).json({ error: "projectId, paymentDate, and amount are required" });
+    const { projectId, adhocProjectName, paymentDate, amount, method, reference, notes } = req.body || {};
+    if (!paymentDate || amount === undefined || amount === "") {
+      return res.status(400).json({ error: "paymentDate and amount are required" });
     }
-    if (!(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
+    const cleanAdhoc = (adhocProjectName || "").trim();
+    if (!projectId && !cleanAdhoc) return res.status(400).json({ error: "Pick a project or type a one-off job name" });
+    if (projectId && !(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
     const rec = await db.insert("payments", {
-      projectId: Number(projectId),
+      projectId: projectId ? Number(projectId) : null,
+      adhocProjectName: projectId ? "" : cleanAdhoc,
       paymentDate,
       amount: Number(amount) || 0,
       method: method || "",
@@ -38,11 +41,11 @@ router.put("/payments/:id", async (req, res, next) => {
     const rec = await db.find("payments", req.params.id);
     if (!rec) return res.status(404).json({ error: "Not found" });
     const patch = {};
-    ["paymentDate", "method", "reference", "notes"].forEach((k) => {
+    ["paymentDate", "method", "reference", "notes", "adhocProjectName"].forEach((k) => {
       if (k in req.body) patch[k] = req.body[k];
     });
     if ("amount" in req.body) patch.amount = Number(req.body.amount) || 0;
-    if ("projectId" in req.body) patch.projectId = Number(req.body.projectId);
+    if ("projectId" in req.body) patch.projectId = req.body.projectId ? Number(req.body.projectId) : null;
     res.json(await db.update("payments", req.params.id, patch));
   } catch (e) { next(e); }
 });
