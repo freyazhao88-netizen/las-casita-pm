@@ -68,11 +68,21 @@ router.get("/payroll-balances", async (req, res, next) => {
     ]);
     const result = employees.map((e) => {
       const empAttendance = attendance.filter((a) => a.employeeId === e.id);
+      const empPayments = wagePayments.filter((p) => p.employeeId === e.id);
       const totalOwed = empAttendance.reduce((s, a) => s + entryCost(a), 0);
-      const totalPaid = wagePayments.filter((p) => p.employeeId === e.id).reduce((s, p) => s + (Number(p.amount) || 0), 0);
-      const thisMonthOwed = empAttendance
-        .filter((a) => a.workDate && a.workDate.slice(0, 7) === month)
-        .reduce((s, a) => s + entryCost(a), 0);
+      const totalPaid = empPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+
+      const before = (dateStr) => !!dateStr && dateStr.slice(0, 7) < month;
+      const inMonth = (dateStr) => !!dateStr && dateStr.slice(0, 7) === month;
+
+      const owedBefore = empAttendance.filter((a) => before(a.workDate)).reduce((s, a) => s + entryCost(a), 0);
+      const paidBefore = empPayments.filter((p) => before(p.paymentDate)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      const balanceBroughtForward = owedBefore - paidBefore;
+
+      const thisMonthOwed = empAttendance.filter((a) => inMonth(a.workDate)).reduce((s, a) => s + entryCost(a), 0);
+      const thisMonthPaid = empPayments.filter((p) => inMonth(p.paymentDate)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+      const balanceCarriedForward = balanceBroughtForward + thisMonthOwed - thisMonthPaid;
+
       return {
         employeeId: e.id,
         employeeName: e.name,
@@ -80,7 +90,10 @@ router.get("/payroll-balances", async (req, res, next) => {
         totalOwed,
         totalPaid,
         balance: totalOwed - totalPaid,
-        thisMonthOwed
+        thisMonthOwed,
+        thisMonthPaid,
+        balanceBroughtForward,
+        balanceCarriedForward
       };
     }).filter((r) => r.totalOwed > 0.005 || r.totalPaid > 0.005 || r.active);
     res.json(result);
