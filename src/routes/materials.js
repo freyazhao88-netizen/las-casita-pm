@@ -12,10 +12,11 @@ function computeAmount(mode, qty, unitPrice, amount) {
 
 router.get("/materials", async (req, res, next) => {
   try {
-    const { projectId, month, projectStatus } = req.query;
+    const { projectId, month, projectStatus, paymentStatus } = req.query;
     let list = await db.all("materials");
     if (projectId) list = list.filter((m) => m.projectId === Number(projectId));
     if (month) list = list.filter((m) => m.purchaseDate && m.purchaseDate.slice(0, 7) === month);
+    if (paymentStatus) list = list.filter((m) => m.paymentStatus === paymentStatus);
     if (projectStatus) {
       const projects = await db.all("projects");
       const idsWithStatus = new Set(projects.filter((p) => p.status === projectStatus).map((p) => p.id));
