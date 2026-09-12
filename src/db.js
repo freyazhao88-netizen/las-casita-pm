@@ -159,9 +159,26 @@ async function updateSettings(patch) {
   return settingsCache;
 }
 
+const RECEIPTS_BUCKET = "receipts";
+
+// Called once at server startup — creates the private storage bucket for receipt
+// photos/PDFs if it doesn't exist yet. Safe to call repeatedly.
+async function ensureReceiptsBucket() {
+  const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+  if (listError) { console.error("Could not list storage buckets:", listError.message); return; }
+  if (buckets.some((b) => b.name === RECEIPTS_BUCKET)) return;
+  const { error: createError } = await supabase.storage.createBucket(RECEIPTS_BUCKET, {
+    public: false,
+    fileSizeLimit: "10MB"
+  });
+  if (createError) console.error("Could not create receipts bucket:", createError.message);
+  else console.log("Created Supabase Storage bucket: " + RECEIPTS_BUCKET);
+}
+
 module.exports = {
   supabase,
   all, find, insert, update, remove, removeWhere,
   hashPassword, verifyPassword, getSettings, updateSettings,
+  ensureReceiptsBucket, RECEIPTS_BUCKET,
   DEFAULT_STAGE_SUGGESTIONS, CATEGORY_LIBRARY, EXPENSE_CATEGORY_LIBRARY
 };
