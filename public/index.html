@@ -67,7 +67,11 @@
     <section class="tab-panel" id="panel-dashboard">
       <div class="panel-head">
         <h2>Portfolio overview 项目总览</h2>
-        <p class="hint">Total labor + material cost per project, quote comparison, and stage progress.</p>
+        <div class="head-controls">
+          <label class="inline-field">Month
+            <input type="month" id="dashMonth">
+          </label>
+        </div>
       </div>
       <div class="stat-row" id="dashStats"></div>
       <div class="two-col">
@@ -524,6 +528,14 @@
       </div>
     </div>
     <div id="payStubSheet"></div>
+  </div>
+</div>
+
+<!-- ---------------- Generic detail modal (payables / receivables breakdown) ---------------- -->
+<div class="modal-overlay" id="detailModal" hidden>
+  <div class="modal">
+    <div class="modal-head"><h3 id="detailModalTitle">Details</h3><button class="btn-ghost" id="btnCloseDetail">✕</button></div>
+    <div id="detailModalBody"></div>
   </div>
 </div>
 
