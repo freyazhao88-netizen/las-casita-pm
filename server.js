@@ -19,6 +19,7 @@ const wagePaymentRoutes = require("./src/routes/wagePayments");
 const expenseRoutes = require("./src/routes/expenses");
 const exportRoutes = require("./src/routes/export");
 const siteLogRoutes = require("./src/routes/siteLogs");
+const warrantyRoutes = require("./src/routes/warranties");
 const db = require("./src/db");
 
 const app = express();
@@ -71,6 +72,7 @@ app.use("/api", wagePaymentRoutes);
 app.use("/api", expenseRoutes);
 app.use("/api", exportRoutes);
 app.use("/api", siteLogRoutes);
+app.use("/api", warrantyRoutes);
 
 app.use("/api", (err, req, res, next) => {
   console.error(err);
