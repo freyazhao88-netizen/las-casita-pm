@@ -24,7 +24,8 @@ const TABLES = {
   payments: "payments",
   wagePayments: "wage_payments",
   expenses: "expenses",
-  siteLogs: "site_logs"
+  siteLogs: "site_logs",
+  warranties: "warranties"
 };
 
 const DEFAULT_STAGE_SUGGESTIONS = [
@@ -43,6 +44,7 @@ const CATEGORY_LIBRARY = [
 ];
 
 const EXPENSE_CATEGORY_LIBRARY = [
+  "Warranty Repair (no charge)", "Paid Repair / Callback",
   "Postage / Shipping", "Meals", "Permit / Inspection Fee", "Mileage / Travel",
   "Parking / Tolls", "Office Supplies", "Equipment Rental", "Dump / Disposal Fee"
 ];
