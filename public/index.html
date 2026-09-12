@@ -149,19 +149,21 @@
     <!-- ===================== Materials ===================== -->
     <section class="tab-panel" id="panel-materials">
       <div class="panel-head">
-        <h2>Material purchases</h2>
-        <div class="head-controls">
-          <label class="inline-field">Project
-            <select id="matProjectFilter"><option value="">All projects</option></select>
-          </label>
-          <label class="inline-field">Project status
-            <select id="matStatusFilter">
-              <option value="">All</option>
-              <option value="active">In progress</option>
-              <option value="completed">Completed</option>
-            </select>
-          </label>
-        </div>
+        <h2>Materials &amp; expenses</h2>
+      </div>
+
+      <h3 class="section-divider">Material purchases</h3>
+      <div class="head-controls" style="margin-bottom:14px;">
+        <label class="inline-field">Project
+          <select id="matProjectFilter"><option value="">All projects</option></select>
+        </label>
+        <label class="inline-field">Project status
+          <select id="matStatusFilter">
+            <option value="">All</option>
+            <option value="active">In progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </label>
       </div>
 
       <div class="card">
@@ -187,6 +189,34 @@
         <div class="card-head"><h3>Purchases</h3><span class="hint" id="matTotalHint"></span></div>
         <div class="table-wrap"><table class="data-table" id="matTable"><thead><tr>
           <th>Date</th><th>Project</th><th>Vendor</th><th>Category</th><th>Description</th><th>Amount</th><th>Payment</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <h3 class="section-divider">Other expenses</h3>
+      <div class="head-controls" style="margin-bottom:14px;">
+        <label class="inline-field">Project
+          <select id="expProjectFilter"><option value="">All projects</option></select>
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Log an expense</h3></div>
+        <form id="expForm" class="field-grid field-grid-5">
+          <div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="expDate" required></div>
+          <div class="field"><label>Project</label><select id="expProject" required></select></div>
+          <div class="field"><label>Category</label><input type="text" id="expCategory" placeholder="e.g. Postage" list="expCategoryList"><datalist id="expCategoryList"></datalist></div>
+          <div class="field"><label>Amount ($)</label><input type="number" id="expAmount" step="0.01" min="0" required></div>
+          <div class="field"><label>Status</label><select id="expStatus"><option value="unreimbursed">Unreimbursed</option><option value="reimbursed">Reimbursed</option></select></div>
+          <div class="field span-2"><label>Description</label><input type="text" id="expDescription" placeholder="What was this for"></div>
+          <div class="field span-2"><label>Notes</label><input type="text" id="expNotes" placeholder="optional"></div>
+          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add expense</button></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Expenses</h3><span class="hint" id="expTotalHint"></span></div>
+        <div class="table-wrap"><table class="data-table" id="expTable"><thead><tr>
+          <th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th><th>Status</th><th>Notes</th><th></th>
         </tr></thead><tbody></tbody></table></div>
       </div>
     </section>
