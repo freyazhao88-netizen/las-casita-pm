@@ -16,6 +16,7 @@ const quoteRoutes = require("./src/routes/quotes");
 const changeOrderRoutes = require("./src/routes/changeOrders");
 const paymentRoutes = require("./src/routes/payments");
 const wagePaymentRoutes = require("./src/routes/wagePayments");
+const expenseRoutes = require("./src/routes/expenses");
 
 const app = express();
 const PORT = process.env.PORT || 4173;
@@ -64,6 +65,7 @@ app.use("/api", quoteRoutes);
 app.use("/api", changeOrderRoutes);
 app.use("/api", paymentRoutes);
 app.use("/api", wagePaymentRoutes);
+app.use("/api", expenseRoutes);
 
 app.use("/api", (err, req, res, next) => {
   console.error(err);
