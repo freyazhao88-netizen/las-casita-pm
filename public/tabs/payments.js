@@ -70,7 +70,7 @@ window.PaymentsTab = (function () {
     } else {
       tbody.innerHTML = list.map((p) => (
         '<tr>' +
-          '<td>' + p.paymentDate + '</td>' +
+          '<td>' + A.fmtDate(p.paymentDate) + '</td>' +
           '<td>' + A.esc(A.projectNameOf(p)) + '</td>' +
           '<td class="amt num">' + A.fmtMoney(p.amount) + '</td>' +
           '<td>' + A.esc(p.method) + '</td>' +
@@ -124,7 +124,7 @@ window.PaymentsTab = (function () {
     } else {
       tbody.innerHTML = list.map((p) => (
         '<tr>' +
-          '<td>' + p.paymentDate + '</td>' +
+          '<td>' + A.fmtDate(p.paymentDate) + '</td>' +
           '<td>' + A.esc(A.employeeName(p.employeeId)) + '</td>' +
           '<td class="amt num">' + A.fmtMoney(p.amount) + '</td>' +
           '<td>' + A.esc(p.method) + '</td>' +
@@ -144,8 +144,8 @@ window.PaymentsTab = (function () {
   }
 
   function monthLabelOf(month) {
-    const [y, m] = month.split("-").map(Number);
-    return new Date(y, m - 1, 1).toLocaleDateString("en-US", { year: "numeric", month: "long" });
+    const [y, m] = month.split("-");
+    return m + "/" + y;
   }
 
   async function printWageStatement(employeeId, month) {
@@ -163,7 +163,7 @@ window.PaymentsTab = (function () {
     const lines = [];
     attendance.filter((a) => inMonth(a.workDate)).forEach((a) => lines.push({
       date: a.workDate,
-      description: "Worked — " + A.projectName(a.projectId) + " (" + a.days + " d × " + A.fmtMoney(a.rate) + ")",
+      description: "Worked — " + A.projectNameOf(a) + " (" + a.days + " d × " + A.fmtMoney(a.rate) + ")",
       amount: a.cost
     }));
     wagePayments.filter((p) => inMonth(p.paymentDate)).forEach((p) => lines.push({
