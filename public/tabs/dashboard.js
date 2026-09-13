@@ -73,19 +73,7 @@ window.DashboardTab = (function () {
       });
     });
 
-    const cardsHost = document.getElementById("dashProjectCards");
-    if (!activeProjects.length) {
-      cardsHost.innerHTML = '<div class="empty-state">No active projects. Create one, or check On hold / Completed in the Projects tab.</div>';
-    } else {
-      cardsHost.innerHTML = activeProjects.map((p) => cardHtml(p)).join("");
-      cardsHost.querySelectorAll("[data-open-project]").forEach((card) => {
-        card.addEventListener("click", () => {
-          window.ProjectsTab.selectOnly(Number(card.getAttribute("data-open-project")));
-          A.switchTab("projects");
-        });
-      });
-    }
-
+    renderProjectTimeline(activeProjects);
     renderUpcomingInspections(allStages, activeIds);
     renderOpenTodos(openTodos);
     renderUpcomingPayments(paymentReminders);
@@ -240,28 +228,45 @@ window.DashboardTab = (function () {
     );
   }
 
-  function cardHtml(p) {
-    const s = p.summary;
-    const pct = s.stageProgress.percent;
-    const varianceTone = s.variance < 0 ? "color:var(--bad)" : "color:var(--good)";
-    return (
-      '<div class="proj-card" data-open-project="' + p.id + '">' +
+  function renderProjectTimeline(activeProjects) {
+    const host = document.getElementById("dashProjectTimeline");
+    if (!activeProjects.length) {
+      host.innerHTML = '<div class="empty-state">No active projects. Create one, or check On hold / Completed in the Projects tab.</div>';
+      return;
+    }
+    const today = new Date();
+    host.innerHTML = activeProjects.map((p) => {
+      const header =
         '<h4>' + A.esc(p.name) + ' <span class="status-pill ' + p.status + '">' + A.esc(p.status.replace("_", " ")) + '</span></h4>' +
-        '<div class="addr">' + A.esc(p.address || "No address") + '</div>' +
-        '<div class="row"><span class="k">Labor cost</span><span class="v num">' + A.fmtMoney(s.laborTotal) + '</span></div>' +
-        '<div class="row"><span class="k">Material cost</span><span class="v num">' + A.fmtMoney(s.materialsTotal) + '</span></div>' +
-        '<div class="row"><span class="k">Other expenses</span><span class="v num">' + A.fmtMoney(s.otherExpensesTotal) + '</span></div>' +
-        '<div class="row total"><span class="k">Total spend</span><span class="v num">' + A.fmtMoney(s.grandTotal) + '</span></div>' +
-        '<div class="row"><span class="k">Quote / Contract total</span><span class="v num">' + A.fmtMoney(s.quotedTotal) + '</span></div>' +
-        '<div class="row"><span class="k">Change orders</span><span class="v num">' + (s.approvedChangeOrdersTotal >= 0 ? "+" : "") + A.fmtMoney(s.approvedChangeOrdersTotal) + '</span></div>' +
-        '<div class="row total"><span class="k">Total contract amount</span><span class="v num">' + A.fmtMoney(s.effectiveQuotedTotal) + '</span></div>' +
-        '<div class="row"><span class="k">Profit margin</span><span class="v num" style="' + varianceTone + '">' + (s.profitMargin >= 0 ? "+" : "") + A.fmtMoney(s.profitMargin) + '</span></div>' +
-        '<div class="row"><span class="k">Received from client</span><span class="v num">' + A.fmtMoney(s.amountReceived) + '</span></div>' +
-        '<div class="row"><span class="k">Outstanding balance</span><span class="v num">' + A.fmtMoney(s.outstandingBalance) + '</span></div>' +
-        '<div class="progress-bar"><div class="fill" style="width:' + pct + '%"></div></div>' +
-        '<div class="row"><span class="k">Stage progress</span><span class="v">' + s.stageProgress.passed + ' / ' + s.stageProgress.total + ' (' + pct + '%)</span></div>' +
-      '</div>'
-    );
+        '<div class="addr">' + A.esc(p.address || "No address") + '</div>';
+
+      if (!p.startDate || !p.estEndDate) {
+        return '<div class="proj-card" data-open-project="' + p.id + '">' + header +
+          '<p class="hint" style="margin-top:10px;">No start / est. completion date set — add one on the project to see timeline progress.</p>' +
+        '</div>';
+      }
+
+      const start = new Date(p.startDate);
+      const end = new Date(p.estEndDate);
+      const totalDays = Math.max(1, Math.round((end - start) / 86400000));
+      const elapsedDays = Math.round((today - start) / 86400000);
+      const pct = Math.max(0, Math.min(100, Math.round((elapsedDays / totalDays) * 100)));
+      const overdue = today > end;
+      const dayLabel = overdue
+        ? Math.round((today - end) / 86400000) + " day" + (Math.round((today - end) / 86400000) === 1 ? "" : "s") + " past est. completion"
+        : "Day " + Math.max(0, elapsedDays) + " of " + totalDays;
+
+      return '<div class="proj-card" data-open-project="' + p.id + '">' + header +
+        '<div class="progress-bar" style="margin-top:10px;"><div class="fill" style="width:' + pct + '%;' + (overdue ? "background:var(--bad);" : "") + '"></div></div>' +
+        '<div class="row"><span class="k" style="' + (overdue ? "color:var(--bad);" : "") + '">' + A.esc(dayLabel) + '</span><span class="v">' + pct + '%</span></div>' +
+      '</div>';
+    }).join("");
+    host.querySelectorAll("[data-open-project]").forEach((card) => {
+      card.addEventListener("click", () => {
+        window.ProjectsTab.selectOnly(Number(card.getAttribute("data-open-project")));
+        A.switchTab("projects");
+      });
+    });
   }
 
   return { render };
