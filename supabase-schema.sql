@@ -300,3 +300,6 @@ create table if not exists small_jobs (
   updated_at timestamptz not null default now()
 );
 alter table small_jobs disable row level security;
+
+alter table small_jobs rename column contact_name to client_name;
+alter table small_jobs add column if not exists manager_name text default '';
