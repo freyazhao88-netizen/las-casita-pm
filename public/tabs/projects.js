@@ -64,12 +64,13 @@ window.ProjectsTab = (function () {
       detailHost.innerHTML = '<div class="empty-state">Select a project on the left, or create a new one.</div>';
       return;
     }
-    let stages, warranties, quotesForProject;
+    let stages, warranties, quotesForProject, changeOrdersForProject;
     try {
-      [stages, warranties, quotesForProject] = await Promise.all([
+      [stages, warranties, quotesForProject, changeOrdersForProject] = await Promise.all([
         A.api("/projects/" + project.id + "/stages"),
         A.api("/warranties?projectId=" + project.id),
-        A.api("/quotes?projectId=" + project.id)
+        A.api("/quotes?projectId=" + project.id),
+        A.api("/change-orders?projectId=" + project.id)
       ]);
     } catch (e) {
       if (myToken !== renderToken) return;
@@ -79,8 +80,8 @@ window.ProjectsTab = (function () {
       return;
     }
     if (myToken !== renderToken) return;
-    detailHost.innerHTML = detailHtml(project, stages, warranties, quotesForProject);
-    bindDetail(project, stages, warranties, quotesForProject);
+    detailHost.innerHTML = detailHtml(project, stages, warranties, quotesForProject, changeOrdersForProject);
+    bindDetail(project, stages, warranties, quotesForProject, changeOrdersForProject);
   }
 
   function selectAndOpen(id) { selectedId = id; creating = false; render(); }
@@ -130,7 +131,7 @@ window.ProjectsTab = (function () {
     });
   }
 
-  function detailHtml(p, stages, warranties, quotesForProject) {
+  function detailHtml(p, stages, warranties, quotesForProject, changeOrdersForProject) {
     const s = p.summary;
     return (
       '<div class="detail-header">' +
@@ -180,6 +181,14 @@ window.ProjectsTab = (function () {
       '</div>' +
 
       '<div class="card">' +
+        '<div class="card-head"><h3>Change Orders 变更单</h3><span class="hint">' + (changeOrdersForProject.length ? changeOrdersForProject.length + ' on file' : 'None yet') + '</span></div>' +
+        (changeOrdersForProject.length
+          ? changeOrdersForProject.map(changeOrderLine).join("")
+          : '<div class="empty-state">No change orders for this project yet.</div>') +
+        '<button class="btn btn-sm" id="btnNewChangeOrderForProject" type="button" style="margin-top:12px;">+ New change order</button>' +
+      '</div>' +
+
+      '<div class="card">' +
         '<div class="card-head"><h3>Inspections</h3><span class="hint">' + stages.length + ' logged for this project</span></div>' +
         (stages.length ? summaryLine(stages) : '<div class="empty-state">No inspections logged yet for this project.</div>') +
         '<button class="btn btn-sm" id="btnViewInspections" type="button" style="margin-top:12px;">View / add inspections →</button>' +
@@ -197,6 +206,20 @@ window.ProjectsTab = (function () {
           '<div class="field"><label>Notes</label><input type="text" id="wtyNotes" placeholder="optional"></div>' +
           '<div class="field span-full"><button class="btn btn-sm" type="submit">+ Add warranty</button></div>' +
         '</form>' +
+      '</div>'
+    );
+  }
+
+  function changeOrderLine(o) {
+    const badgeClass = o.status === "approved" ? "passed" : o.status === "rejected" ? "failed" : "";
+    return (
+      '<div class="proj-line" style="align-items:flex-start;padding:8px 0;">' +
+        '<span>' +
+          '<strong>' + A.esc(o.orderNo || o.title || "Untitled change order") + '</strong> ' +
+          '<span class="badge ' + badgeClass + '">' + A.esc(o.status || "pending") + '</span><br>' +
+          '<small style="color:var(--muted);">' + A.esc(A.fmtDate(o.orderDate)) + (o.title ? " · " + A.esc(o.title) : "") + ' · ' + A.fmtMoney(o.total) + '</small>' +
+        '</span>' +
+        '<button class="btn btn-sm" data-open-co="' + o.id + '" type="button">Open →</button>' +
       '</div>'
     );
   }
@@ -256,7 +279,7 @@ window.ProjectsTab = (function () {
     return '<div class="tile"><div class="label">' + A.esc(label) + '</div><div class="value num">' + value + '</div></div>';
   }
 
-  function bindDetail(p, stages, warranties, quotesForProject) {
+  function bindDetail(p, stages, warranties, quotesForProject, changeOrdersForProject) {
     document.getElementById("btnNewQuoteForProject").addEventListener("click", () => {
       window.QuotesTab.newQuoteForProject(p.id);
       A.switchTab("quotes");
@@ -265,6 +288,17 @@ window.ProjectsTab = (function () {
       btn.addEventListener("click", () => {
         window.QuotesTab.openQuote(Number(btn.getAttribute("data-open-quote")));
         A.switchTab("quotes");
+      });
+    });
+
+    document.getElementById("btnNewChangeOrderForProject").addEventListener("click", () => {
+      window.ChangeOrdersTab.newOrderForProject(p.id);
+      A.switchTab("changeorders");
+    });
+    document.querySelectorAll("[data-open-co]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        window.ChangeOrdersTab.openOrder(Number(btn.getAttribute("data-open-co")));
+        A.switchTab("changeorders");
       });
     });
 
