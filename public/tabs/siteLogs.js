@@ -84,12 +84,16 @@ window.SiteLogsTab = (function () {
     const params = [];
     if (month) params.push("month=" + month);
     if (projectId) params.push("projectId=" + projectId);
-    const list = await A.api("/site-logs" + (params.length ? "?" + params.join("&") : ""));
+    const [list, attendance] = await Promise.all([
+      A.api("/site-logs" + (params.length ? "?" + params.join("&") : "")),
+      A.api("/attendance?" + (month ? "month=" + month : "month=" + A.currentMonth()))
+    ]);
     const host = document.getElementById("slgList");
     if (!list.length) {
       host.innerHTML = '<div class="empty-state">No site logs for this month yet. Log today\'s entry above.</div>';
       return;
     }
+    const casualMap = casualWorkerMap(attendance);
     const groupOrder = [];
     const byDate = {};
     list.forEach((l) => {
@@ -100,7 +104,7 @@ window.SiteLogsTab = (function () {
       expandedDates.add(groupOrder[0]);
       initializedExpand = true;
     }
-    host.innerHTML = groupOrder.map((d) => dayCardHtml(d, byDate[d])).join("");
+    host.innerHTML = groupOrder.map((d) => dayCardHtml(d, byDate[d], casualMap)).join("");
     host.querySelectorAll("details.slg-day").forEach((det) => {
       det.addEventListener("toggle", () => {
         const date = det.getAttribute("data-date");
@@ -142,7 +146,22 @@ window.SiteLogsTab = (function () {
     return names.join(", ");
   }
 
-  function projectGroupHtml(logs) {
+  // Casual/day laborers (logged via the Casual labor log, no employee record) never
+  // show up in the site log's crew checklist — this pulls their names in from the
+  // attendance table by matching the same date + project, so the site log's crew
+  // line reflects who actually worked, not just who was checked on the form.
+  function casualWorkerMap(attendance) {
+    const map = {};
+    attendance.filter((a) => !a.employeeId && (a.adhocEmployeeName || "").trim()).forEach((a) => {
+      const key = a.workDate + "|" + projectKeyOf(a);
+      const name = a.adhocEmployeeName.trim();
+      if (!map[key]) map[key] = [];
+      if (!map[key].includes(name)) map[key].push(name);
+    });
+    return map;
+  }
+
+  function projectGroupHtml(logs, casualNames) {
     const crew = mergedCrew(logs);
     const weather = (logs.find((l) => l.weather) || {}).weather || "";
     const notesHtml = logs.filter((l) => l.notes).map((l) => (
@@ -162,12 +181,13 @@ window.SiteLogsTab = (function () {
       '<button class="row-del" data-del-log="' + delIds + '" title="Delete">✕</button></div>' +
       (weather ? '<div class="proj-line"><span>Weather</span><span>' + A.esc(weather) + '</span></div>' : "") +
       (crew ? '<div class="proj-line"><span>Crew</span><span>' + A.esc(crew) + '</span></div>' : "") +
+      (casualNames && casualNames.length ? '<div class="proj-line"><span>Casual 临时工</span><span>' + A.esc(casualNames.join(", ")) + '</span></div>' : "") +
       notesHtml +
       todosHtml
     );
   }
 
-  function dayCardHtml(date, logs) {
+  function dayCardHtml(date, logs, casualMap) {
     const groupOrder = [];
     const byProject = {};
     logs.forEach((l) => {
@@ -177,7 +197,7 @@ window.SiteLogsTab = (function () {
     });
     const entriesHtml = groupOrder.map((key, i) => (
       '<div' + (i > 0 ? ' style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);"' : '') + '>' +
-        projectGroupHtml(byProject[key]) +
+        projectGroupHtml(byProject[key], casualMap[date + "|" + key]) +
       '</div>'
     )).join("");
     const isOpen = expandedDates.has(date);
