@@ -15,12 +15,17 @@ router.get("/small-jobs", async (req, res, next) => {
     ]);
 
     const isAdhoc = (r) => !r.projectId && r.adhocProjectName;
+    // Group by a case/whitespace-insensitive key so "12152Chino" and "12152chino"
+    // (typed on different forms, on different days) land in the same job — but
+    // keep the first-seen spelling as the display name.
+    const normKey = (name) => (name || "").trim().toLowerCase();
     const jobs = {};
     const jobFor = (name) => {
-      if (!jobs[name]) {
-        jobs[name] = { name, laborTotal: 0, materialsTotal: 0, otherExpensesTotal: 0, amountReceived: 0, entries: [], lastActivity: "" };
+      const key = normKey(name);
+      if (!jobs[key]) {
+        jobs[key] = { name: (name || "").trim(), laborTotal: 0, materialsTotal: 0, otherExpensesTotal: 0, amountReceived: 0, entries: [], lastActivity: "" };
       }
-      return jobs[name];
+      return jobs[key];
     };
     const track = (job, date) => { if (date && date > job.lastActivity) job.lastActivity = date; };
 
