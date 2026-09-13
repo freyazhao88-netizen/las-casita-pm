@@ -6,9 +6,10 @@ const router = express.Router();
 
 router.get("/payments", async (req, res, next) => {
   try {
-    const { projectId } = req.query;
+    const { projectId, month } = req.query;
     let list = await db.all("payments");
     if (projectId) list = list.filter((p) => p.projectId === Number(projectId));
+    if (month) list = list.filter((p) => p.paymentDate && p.paymentDate.slice(0, 7) === month);
     list.sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
     res.json(list);
   } catch (e) { next(e); }
