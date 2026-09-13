@@ -14,7 +14,7 @@ window.SmallJobsTab = (function () {
     host.innerHTML = jobs.map((j) => (
       '<div class="proj-card" data-job="' + A.esc(j.name) + '">' +
         '<h4>' + A.esc(j.name) + '</h4>' +
-        '<div class="addr">Last activity: ' + A.esc(A.fmtDate(j.lastActivity)) + '</div>' +
+        '<div class="addr">' + (j.address ? A.esc(j.address) + " · " : "") + 'Last activity: ' + A.esc(A.fmtDate(j.lastActivity)) + '</div>' +
         '<div class="row"><span class="k">Received 收款</span><span class="v">' + A.fmtMoney(j.amountReceived) + '</span></div>' +
         '<div class="row"><span class="k">Labor 人工</span><span class="v">' + A.fmtMoney(j.laborTotal) + '</span></div>' +
         '<div class="row"><span class="k">Materials 材料</span><span class="v">' + A.fmtMoney(j.materialsTotal) + '</span></div>' +
@@ -36,12 +36,35 @@ window.SmallJobsTab = (function () {
         '<td class="amt num">' + (e.type === "payment" ? "+" : "−") + A.fmtMoney(e.amount) + '</td></tr>'
     )).join("") || '<tr><td colspan="4" style="padding:16px 0;color:var(--muted);">No entries.</td></tr>';
     const html =
+      '<form id="sjInfoForm" style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line);">' +
+        '<div class="field-grid field-grid-3">' +
+          '<div class="field"><label>Contact person</label><input type="text" id="sjContact" value="' + A.esc(job.contactName || "") + '"></div>' +
+          '<div class="field"><label>Phone</label><input type="text" id="sjPhone" value="' + A.esc(job.phone || "") + '"></div>' +
+          '<div class="field span-2"><label>Address</label><input type="text" id="sjAddress" value="' + A.esc(job.address || "") + '"></div>' +
+        '</div>' +
+        '<div class="field" style="margin-top:10px;"><label>Notes</label><textarea id="sjNotes" rows="2">' + A.esc(job.notes || "") + '</textarea></div>' +
+        '<button class="btn btn-sm" type="submit" style="margin-top:10px;">Save info</button>' +
+      '</form>' +
       '<table class="data-table"><thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th></tr></thead>' +
       '<tbody>' + rowsHtml + '</tbody></table>' +
       '<div class="row total" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line);">' +
         '<span class="k">Profit 利润</span><span class="v" style="color:' + (job.profit >= 0 ? "var(--good)" : "var(--bad)") + '">' + A.fmtMoney(job.profit) + '</span>' +
       '</div>';
     A.showDetailModal(job.name, html);
+    document.getElementById("sjInfoForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await A.api("/small-jobs/" + encodeURIComponent(job.name) + "/info", {
+        method: "PUT",
+        body: {
+          contactName: document.getElementById("sjContact").value,
+          phone: document.getElementById("sjPhone").value,
+          address: document.getElementById("sjAddress").value,
+          notes: document.getElementById("sjNotes").value
+        }
+      });
+      A.toast("Info saved");
+      render();
+    });
   }
 
   return { render };
