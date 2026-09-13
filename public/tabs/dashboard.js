@@ -13,10 +13,11 @@ window.DashboardTab = (function () {
   async function render() {
     bindOnce();
     const month = document.getElementById("dashMonth").value || A.currentMonth();
-    const [projects, monthAttendance, monthLaborSubs, monthMaterials, allMaterials, allExpenses, allStages, openTodos, paymentReminders] = await Promise.all([
+    const [projects, monthAttendance, monthLaborSubs, allLaborSubs, monthMaterials, allMaterials, allExpenses, allStages, openTodos, paymentReminders] = await Promise.all([
       A.api("/projects?summary=1"),
       A.api("/attendance?month=" + month),
       A.api("/labor-subcontracts?month=" + month),
+      A.api("/labor-subcontracts"),
       A.api("/materials?month=" + month),
       A.api("/materials"),
       A.api("/expenses"),
@@ -41,8 +42,10 @@ window.DashboardTab = (function () {
 
     const unpaidMaterials = allMaterials.filter((m) => m.paymentStatus !== "paid");
     const unpaidExpenses = allExpenses.filter((e) => e.status !== "reimbursed");
+    const unpaidLaborSubs = allLaborSubs.filter((s) => s.paymentStatus !== "paid");
     const payablesTotal = unpaidMaterials.reduce((s, m) => s + (Number(m.amount) || 0), 0)
-      + unpaidExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      + unpaidExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0)
+      + unpaidLaborSubs.reduce((s, x) => s + (Number(x.amount) || 0), 0);
 
     const receivablesTotal = projects.reduce((s, p) => s + p.summary.outstandingBalance, 0);
 
@@ -58,7 +61,7 @@ window.DashboardTab = (function () {
     document.getElementById("dashStats").querySelectorAll("[data-detail]").forEach((el) => {
       el.addEventListener("click", () => {
         const kind = el.getAttribute("data-detail");
-        if (kind === "payables") showPayablesDetail(unpaidMaterials, unpaidExpenses, payablesTotal);
+        if (kind === "payables") showPayablesDetail(unpaidMaterials, unpaidExpenses, unpaidLaborSubs, payablesTotal);
         else if (kind === "receivables") showReceivablesDetail(projects, receivablesTotal);
         else if (kind === "labor") showByProjectDetail("Labor cost — " + monthLabel, laborEntries, laborAmountOf, monthLabor);
         else if (kind === "material") showByProjectDetail("Material cost — " + monthLabel, monthMaterials, (m) => Number(m.amount) || 0, monthMaterialTotal);
@@ -72,9 +75,10 @@ window.DashboardTab = (function () {
     renderUpcomingPayments(paymentReminders);
   }
 
-  function showPayablesDetail(unpaidMaterials, unpaidExpenses, total) {
+  function showPayablesDetail(unpaidMaterials, unpaidExpenses, unpaidLaborSubs, total) {
     const matTotal = unpaidMaterials.reduce((s, m) => s + (Number(m.amount) || 0), 0);
     const expTotal = unpaidExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const subTotal = unpaidLaborSubs.reduce((s, x) => s + (Number(x.amount) || 0), 0);
     const matRows = unpaidMaterials.slice().sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate)).map((m) => (
       '<tr><td>' + A.fmtDate(m.purchaseDate) + '</td><td>' + A.esc(A.projectNameOf(m)) + '</td><td>' + A.esc(m.vendor) + '</td>' +
       '<td>' + A.esc(m.category) + '</td><td class="amt num">' + A.fmtMoney(m.amount) + '</td></tr>'
@@ -83,6 +87,10 @@ window.DashboardTab = (function () {
       '<tr><td>' + A.fmtDate(e.expenseDate) + '</td><td>' + A.esc(A.projectNameOf(e)) + '</td><td>' + A.esc(e.category) + '</td>' +
       '<td>' + A.esc(e.description) + '</td><td class="amt num">' + A.fmtMoney(e.amount) + '</td></tr>'
     )).join("") || '<tr><td colspan="5" style="color:var(--muted);">No unreimbursed expenses.</td></tr>';
+    const subRows = unpaidLaborSubs.slice().sort((a, b) => (b.startDate || "").localeCompare(a.startDate || "")).map((s) => (
+      '<tr><td>' + A.fmtDate(s.startDate) + '</td><td>' + A.esc(A.projectNameOf(s)) + '</td><td>' + A.esc(s.description) + '</td>' +
+      '<td class="amt num">' + A.fmtMoney(s.amount) + '</td></tr>'
+    )).join("") || '<tr><td colspan="4" style="color:var(--muted);">No unpaid labor subcontracts.</td></tr>';
 
     const html =
       '<p style="margin:0 0 14px;font-size:13px;">Total owed: <strong class="num">' + A.fmtMoney(total) + '</strong></p>' +
@@ -91,7 +99,10 @@ window.DashboardTab = (function () {
       '<tbody>' + matRows + '</tbody></table></div>' +
       '<h4 style="margin:18px 0 8px;font-size:13px;">Unreimbursed other expenses — ' + A.fmtMoney(expTotal) + '</h4>' +
       '<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>' +
-      '<tbody>' + expRows + '</tbody></table></div>';
+      '<tbody>' + expRows + '</tbody></table></div>' +
+      '<h4 style="margin:18px 0 8px;font-size:13px;">Unpaid labor subcontracts — ' + A.fmtMoney(subTotal) + '</h4>' +
+      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Start</th><th>Project</th><th>Description</th><th>Amount</th></tr></thead>' +
+      '<tbody>' + subRows + '</tbody></table></div>';
 
     A.showDetailModal("应付款明细 Payables breakdown", html);
   }
