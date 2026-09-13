@@ -38,28 +38,42 @@ window.SiteLogsTab = (function () {
 
     document.getElementById("slgForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const crewEmployeeIds = [...document.querySelectorAll(".slg-crew-cb:checked")].map((cb) => Number(cb.value));
       const body = {
         logDate: document.getElementById("slgDate").value,
         projectId: document.getElementById("slgProject").value,
         weather: document.getElementById("slgWeather").value,
-        crew: document.getElementById("slgCrew").value,
+        crewEmployeeIds,
         notes: document.getElementById("slgNotes").value,
         todos: pendingTodos.map((t) => ({ text: t, done: false }))
       };
       if (!body.projectId) { A.toast("Pick a project"); return; }
       await A.api("/site-logs", { method: "POST", body });
       document.getElementById("slgWeather").value = "";
-      document.getElementById("slgCrew").value = "";
       document.getElementById("slgNotes").value = "";
+      document.querySelectorAll(".slg-crew-cb:checked").forEach((cb) => { cb.checked = false; });
       pendingTodos = [];
       renderPendingTodos();
-      A.toast("Log saved");
+      A.toast("Log saved — crew's attendance added automatically");
       render();
     });
   }
 
+  function renderCrewChecklist() {
+    const host = document.getElementById("slgCrewChecklist");
+    const checkedIds = new Set([...document.querySelectorAll(".slg-crew-cb:checked")].map((cb) => cb.value));
+    const employees = (A.state.employees || []).filter((e) => e.active);
+    host.innerHTML = employees.map((e) => (
+      '<label class="chip" style="cursor:pointer;">' +
+        '<input type="checkbox" class="slg-crew-cb" value="' + e.id + '" style="margin-right:6px;"' + (checkedIds.has(String(e.id)) ? " checked" : "") + '>' +
+        A.esc(e.name) +
+      '</label>'
+    )).join("");
+  }
+
   async function render() {
     bindOnce();
+    renderCrewChecklist();
     const projectId = document.getElementById("slgProjectFilter").value;
     const list = await A.api("/site-logs" + (projectId ? "?projectId=" + projectId : ""));
     const host = document.getElementById("slgList");
