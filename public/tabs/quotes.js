@@ -8,6 +8,8 @@ window.QuotesTab = (function () {
   let companySettings = null;
   let quote = null; // current editor state
   let bound = false;
+  let pendingOpenId = null;
+  let pendingNewForProject = null;
 
   var TXT = {
     en: {
@@ -143,9 +145,21 @@ window.QuotesTab = (function () {
 
   async function render() {
     await ensureLibrary();
+    // btnSaveQuote/btnBackToQuotes/etc. are static markup shared by both views, so bind
+    // them regardless of which branch below actually shows.
+    bindListButtons();
+    // Coming from a project's detail page ("open this quote" / "start a new one for this
+    // project") — jump straight to the editor instead of flashing the list view first.
+    if (pendingOpenId !== null) {
+      const id = pendingOpenId; pendingOpenId = null;
+      return openEditor(id);
+    }
+    if (pendingNewForProject !== null) {
+      const projectId = pendingNewForProject; pendingNewForProject = null;
+      return startNewForProject(projectId);
+    }
     document.getElementById("quotesListView").hidden = false;
     document.getElementById("quoteEditorView").hidden = true;
-    bindListButtons();
     const list = await A.api("/quotes");
     const tbody = document.querySelector("#quotesTable tbody");
     if (!list.length) {
@@ -201,6 +215,19 @@ window.QuotesTab = (function () {
       paymentSchedule: full.paymentSchedule && full.paymentSchedule.length ? full.paymentSchedule : defaultPaymentSchedule(),
       exclusions: full.exclusions && full.exclusions.length ? full.exclusions : defaultExclusions()
     };
+    openEditorView();
+  }
+
+  function startNewForProject(projectId) {
+    quote = blankQuote();
+    const proj = A.state.projects.find((p) => p.id === projectId);
+    quote.projectId = projectId;
+    if (proj) {
+      quote.meta.address = proj.address || "";
+      quote.meta.client = proj.clientName || "";
+      quote.meta.startDate = proj.startDate || "";
+      quote.meta.estEndDate = proj.estEndDate || "";
+    }
     openEditorView();
   }
 
@@ -534,5 +561,9 @@ window.QuotesTab = (function () {
     renderBalance();
   }
 
-  return { render };
+  return {
+    render,
+    openQuote: (id) => { pendingOpenId = id; },
+    newQuoteForProject: (projectId) => { pendingNewForProject = projectId; }
+  };
 })();
