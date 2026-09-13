@@ -33,9 +33,8 @@ window.DashboardTab = (function () {
     // question that includes things like warranty repairs billed against a completed project.
     const monthLabor = monthAttendance.reduce((s, a) => s + (Number(a.days) || 0) * (Number(a.rate) || 0), 0);
     const monthMaterialTotal = monthMaterials.reduce((s, m) => s + (Number(m.amount) || 0), 0);
-    const monthExpenseTotal = allExpenses
-      .filter((e) => e.expenseDate && e.expenseDate.slice(0, 7) === month)
-      .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    const monthExpenses = allExpenses.filter((e) => e.expenseDate && e.expenseDate.slice(0, 7) === month);
+    const monthExpenseTotal = monthExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
     const unpaidMaterials = allMaterials.filter((m) => m.paymentStatus !== "paid");
     const unpaidExpenses = allExpenses.filter((e) => e.status !== "reimbursed");
@@ -48,7 +47,7 @@ window.DashboardTab = (function () {
     document.getElementById("dashStats").innerHTML = [
       tile("Labor cost (" + monthLabel + ")", A.fmtMoney(monthLabor), "", "◷", "click for breakdown", "", "labor"),
       tile("Material cost (" + monthLabel + ")", A.fmtMoney(monthMaterialTotal), "", "▤", "click for breakdown", "", "material"),
-      tile("Other expenses (" + monthLabel + ")", A.fmtMoney(monthExpenseTotal), "", "◈", "incl. warranty / repairs"),
+      tile("Other expenses (" + monthLabel + ")", A.fmtMoney(monthExpenseTotal), "", "◈", "click for breakdown", "", "expense"),
       tile("应付款 Payables", A.fmtMoney(payablesTotal), "warm", "↥", "click for breakdown", "", "payables"),
       tile("应收款 Receivables", A.fmtMoney(receivablesTotal), "warm", "↧", "click for breakdown", "", "receivables")
     ].join("");
@@ -60,6 +59,7 @@ window.DashboardTab = (function () {
         else if (kind === "receivables") showReceivablesDetail(projects, receivablesTotal);
         else if (kind === "labor") showByProjectDetail("Labor cost — " + monthLabel, monthAttendance, (a) => (Number(a.days) || 0) * (Number(a.rate) || 0), monthLabor);
         else if (kind === "material") showByProjectDetail("Material cost — " + monthLabel, monthMaterials, (m) => Number(m.amount) || 0, monthMaterialTotal);
+        else if (kind === "expense") showByProjectDetail("Other expenses — " + monthLabel, monthExpenses, (e) => Number(e.amount) || 0, monthExpenseTotal);
       });
     });
 
