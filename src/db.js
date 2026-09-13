@@ -25,7 +25,8 @@ const TABLES = {
   wagePayments: "wage_payments",
   expenses: "expenses",
   siteLogs: "site_logs",
-  warranties: "warranties"
+  warranties: "warranties",
+  laborSubcontracts: "labor_subcontracts"
 };
 
 const DEFAULT_STAGE_SUGGESTIONS = [
