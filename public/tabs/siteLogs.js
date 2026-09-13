@@ -3,6 +3,8 @@ window.SiteLogsTab = (function () {
   const A = window.App;
   let bound = false;
   let pendingTodos = [];
+  const expandedDates = new Set();
+  let initializedExpand = false;
 
   function renderPendingTodos() {
     const host = document.getElementById("slgTodoPending");
@@ -94,11 +96,23 @@ window.SiteLogsTab = (function () {
       if (!byDate[l.logDate]) { byDate[l.logDate] = []; groupOrder.push(l.logDate); }
       byDate[l.logDate].push(l);
     });
-    host.innerHTML = groupOrder.map((d) => dayCardHtml(byDate[d])).join("");
+    if (!initializedExpand && groupOrder.length) {
+      expandedDates.add(groupOrder[0]);
+      initializedExpand = true;
+    }
+    host.innerHTML = groupOrder.map((d) => dayCardHtml(d, byDate[d])).join("");
+    host.querySelectorAll("details.slg-day").forEach((det) => {
+      det.addEventListener("toggle", () => {
+        const date = det.getAttribute("data-date");
+        if (det.open) expandedDates.add(date); else expandedDates.delete(date);
+      });
+    });
     host.querySelectorAll("[data-del-log]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
         if (!confirm("Delete this log entry?")) return;
-        await A.api("/site-logs/" + btn.getAttribute("data-del-log"), { method: "DELETE" });
+        const ids = btn.getAttribute("data-del-log").split(",");
+        for (const id of ids) await A.api("/site-logs/" + id, { method: "DELETE" });
         render();
       });
     });
@@ -111,37 +125,68 @@ window.SiteLogsTab = (function () {
     });
   }
 
-  function logEntryHtml(l) {
-    const todosHtml = (l.todos || []).length
-      ? '<div class="todo-list">' + l.todos.map((t, i) => (
-          '<label class="' + (t.done ? "done" : "") + '">' +
-            '<input type="checkbox" data-todo-toggle="' + l.id + ':' + i + '" ' + (t.done ? "checked" : "") + '>' +
-            A.esc(t.text) +
-          '</label>'
-        )).join("") + '</div>'
-      : "";
+  // Groups a day's raw site_log rows by project — the "Log Today" form creates a
+  // separate row per submission, so a project logged twice in one day (e.g. crew
+  // added in two batches) would otherwise show as two identical-looking headers.
+  function projectKeyOf(l) {
+    return l.projectId ? ("id:" + l.projectId) : ("adhoc:" + (l.adhocProjectName || "").trim().toLowerCase());
+  }
+
+  function mergedCrew(logs) {
+    const names = [];
+    logs.forEach((l) => {
+      (l.crew || "").split(",").map((s) => s.trim()).filter(Boolean).forEach((n) => {
+        if (!names.includes(n)) names.push(n);
+      });
+    });
+    return names.join(", ");
+  }
+
+  function projectGroupHtml(logs) {
+    const crew = mergedCrew(logs);
+    const weather = (logs.find((l) => l.weather) || {}).weather || "";
+    const notesHtml = logs.filter((l) => l.notes).map((l) => (
+      '<p style="font-size:12.5px;color:var(--ink);margin:8px 0 0;">' + A.esc(l.notes) + '</p>'
+    )).join("");
+    const todosHtml = logs.filter((l) => (l.todos || []).length).map((l) => (
+      '<div class="todo-list">' + l.todos.map((t, i) => (
+        '<label class="' + (t.done ? "done" : "") + '">' +
+          '<input type="checkbox" data-todo-toggle="' + l.id + ':' + i + '" ' + (t.done ? "checked" : "") + '>' +
+          A.esc(t.text) +
+        '</label>'
+      )).join("") + '</div>'
+    )).join("");
+    const delIds = logs.map((l) => l.id).join(",");
     return (
-      '<div class="proj-line" style="font-weight:600;"><span>' + A.esc(A.projectNameOf(l)) + '</span>' +
-      '<button class="row-del" data-del-log="' + l.id + '" title="Delete">✕</button></div>' +
-      (l.weather ? '<div class="proj-line"><span>Weather</span><span>' + A.esc(l.weather) + '</span></div>' : "") +
-      (l.crew ? '<div class="proj-line"><span>Crew</span><span>' + A.esc(l.crew) + '</span></div>' : "") +
-      (l.notes ? '<p style="font-size:12.5px;color:var(--ink);margin:8px 0 0;">' + A.esc(l.notes) + '</p>' : "") +
+      '<div class="proj-line" style="font-weight:600;"><span>' + A.esc(A.projectNameOf(logs[0])) + '</span>' +
+      '<button class="row-del" data-del-log="' + delIds + '" title="Delete">✕</button></div>' +
+      (weather ? '<div class="proj-line"><span>Weather</span><span>' + A.esc(weather) + '</span></div>' : "") +
+      (crew ? '<div class="proj-line"><span>Crew</span><span>' + A.esc(crew) + '</span></div>' : "") +
+      notesHtml +
       todosHtml
     );
   }
 
-  function dayCardHtml(logs) {
-    const entriesHtml = logs.map((l, i) => (
+  function dayCardHtml(date, logs) {
+    const groupOrder = [];
+    const byProject = {};
+    logs.forEach((l) => {
+      const key = projectKeyOf(l);
+      if (!byProject[key]) { byProject[key] = []; groupOrder.push(key); }
+      byProject[key].push(l);
+    });
+    const entriesHtml = groupOrder.map((key, i) => (
       '<div' + (i > 0 ? ' style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);"' : '') + '>' +
-        logEntryHtml(l) +
+        projectGroupHtml(byProject[key]) +
       '</div>'
     )).join("");
+    const isOpen = expandedDates.has(date);
     return (
-      '<div class="emp-summary-block">' +
-        '<div class="head"><span>' + A.esc(A.fmtDate(logs[0].logDate)) + '</span>' +
-        '<span class="hint">' + logs.length + ' project' + (logs.length === 1 ? "" : "s") + '</span></div>' +
-        entriesHtml +
-      '</div>'
+      '<details class="emp-summary-block slg-day" data-date="' + A.esc(date) + '"' + (isOpen ? " open" : "") + '>' +
+        '<summary class="head" style="cursor:pointer;"><span>' + A.esc(A.fmtDate(date)) + '</span>' +
+        '<span class="hint">' + groupOrder.length + ' project' + (groupOrder.length === 1 ? "" : "s") + ' ' + (isOpen ? "▾" : "▸") + '</span></summary>' +
+        '<div style="margin-top:10px;">' + entriesHtml + '</div>' +
+      '</details>'
     );
   }
 
