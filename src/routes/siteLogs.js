@@ -24,17 +24,19 @@ function crewNameText(employees, crewEmployeeIds) {
 // Fills in that day's attendance for each crew member — defaults to a full day at
 // their current rate. Never overwrites or removes an existing entry, so a manual
 // correction (half day, different rate) made afterward is always preserved.
-async function syncAttendanceForCrew(projectId, logDate, crewEmployeeIds, employees) {
+async function syncAttendanceForCrew(projectId, adhocProjectName, logDate, crewEmployeeIds, employees) {
   if (!crewEmployeeIds.length) return;
   const attendance = await db.all("attendance");
   for (const employeeId of crewEmployeeIds) {
-    const exists = attendance.some((a) => a.employeeId === employeeId && a.projectId === projectId && a.workDate === logDate);
+    const exists = attendance.some((a) => a.employeeId === employeeId && a.workDate === logDate &&
+      (projectId ? a.projectId === projectId : a.adhocProjectName === adhocProjectName));
     if (exists) continue;
     const emp = employees.find((e) => e.id === employeeId);
     if (!emp) continue;
     await db.insert("attendance", {
       employeeId,
       projectId,
+      adhocProjectName: projectId ? "" : adhocProjectName,
       workDate: logDate,
       days: 1,
       rate: Number(emp.defaultDailyRate) || 0,
@@ -61,10 +63,10 @@ router.get("/site-logs/open-todos", async (req, res, next) => {
     const activeIds = new Set(projects.filter((p) => p.status === "active").map((p) => p.id));
     const projectName = (id) => { const p = projects.find((x) => x.id === id); return p ? p.name : ""; };
     const open = [];
-    logs.filter((l) => activeIds.has(l.projectId)).forEach((l) => {
+    logs.filter((l) => (l.projectId ? activeIds.has(l.projectId) : true)).forEach((l) => {
       (l.todos || []).forEach((t, idx) => {
         if (!t.done) {
-          open.push({ logId: l.id, todoIndex: idx, projectId: l.projectId, projectName: projectName(l.projectId), logDate: l.logDate, text: t.text });
+          open.push({ logId: l.id, todoIndex: idx, projectId: l.projectId, projectName: l.projectId ? projectName(l.projectId) : (l.adhocProjectName || "One-off job"), logDate: l.logDate, text: t.text });
         }
       });
     });
@@ -75,13 +77,16 @@ router.get("/site-logs/open-todos", async (req, res, next) => {
 
 router.post("/site-logs", async (req, res, next) => {
   try {
-    const { projectId, logDate, weather, crewEmployeeIds, notes, todos } = req.body || {};
-    if (!projectId || !logDate) return res.status(400).json({ error: "projectId and logDate are required" });
-    if (!(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
+    const { projectId, adhocProjectName, logDate, weather, crewEmployeeIds, notes, todos } = req.body || {};
+    if (!logDate) return res.status(400).json({ error: "logDate is required" });
+    const cleanAdhoc = (adhocProjectName || "").trim();
+    if (!projectId && !cleanAdhoc) return res.status(400).json({ error: "Pick a project or type a one-off job name" });
+    if (projectId && !(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
     const crewIds = cleanCrewIds(crewEmployeeIds);
     const employees = await db.all("employees");
     const rec = await db.insert("siteLogs", {
-      projectId: Number(projectId),
+      projectId: projectId ? Number(projectId) : null,
+      adhocProjectName: projectId ? "" : cleanAdhoc,
       logDate,
       weather: weather || "",
       crew: crewNameText(employees, crewIds),
@@ -89,7 +94,7 @@ router.post("/site-logs", async (req, res, next) => {
       notes: notes || "",
       todos: cleanTodos(todos)
     });
-    await syncAttendanceForCrew(Number(projectId), logDate, crewIds, employees);
+    await syncAttendanceForCrew(rec.projectId, rec.adhocProjectName, logDate, crewIds, employees);
     res.status(201).json(rec);
   } catch (e) { next(e); }
 });
@@ -102,7 +107,8 @@ router.put("/site-logs/:id", async (req, res, next) => {
     ["logDate", "weather", "notes"].forEach((k) => {
       if (k in req.body) patch[k] = req.body[k];
     });
-    if ("projectId" in req.body) patch.projectId = Number(req.body.projectId);
+    if ("projectId" in req.body) patch.projectId = req.body.projectId ? Number(req.body.projectId) : null;
+    if ("adhocProjectName" in req.body) patch.adhocProjectName = req.body.adhocProjectName;
     if ("todos" in req.body) patch.todos = cleanTodos(req.body.todos);
 
     let crewIds = null;
@@ -115,7 +121,7 @@ router.put("/site-logs/:id", async (req, res, next) => {
     }
 
     const updated = await db.update("siteLogs", req.params.id, patch);
-    if (crewIds) await syncAttendanceForCrew(updated.projectId, updated.logDate, crewIds, employees);
+    if (crewIds) await syncAttendanceForCrew(updated.projectId, updated.adhocProjectName, updated.logDate, crewIds, employees);
     res.json(updated);
   } catch (e) { next(e); }
 });
