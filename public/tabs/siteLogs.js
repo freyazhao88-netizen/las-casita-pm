@@ -88,7 +88,13 @@ window.SiteLogsTab = (function () {
       host.innerHTML = '<div class="empty-state">No site logs for this month yet. Log today\'s entry above.</div>';
       return;
     }
-    host.innerHTML = list.map((l) => logCardHtml(l)).join("");
+    const groupOrder = [];
+    const byDate = {};
+    list.forEach((l) => {
+      if (!byDate[l.logDate]) { byDate[l.logDate] = []; groupOrder.push(l.logDate); }
+      byDate[l.logDate].push(l);
+    });
+    host.innerHTML = groupOrder.map((d) => dayCardHtml(byDate[d])).join("");
     host.querySelectorAll("[data-del-log]").forEach((btn) => {
       btn.addEventListener("click", async () => {
         if (!confirm("Delete this log entry?")) return;
@@ -105,7 +111,7 @@ window.SiteLogsTab = (function () {
     });
   }
 
-  function logCardHtml(l) {
+  function logEntryHtml(l) {
     const todosHtml = (l.todos || []).length
       ? '<div class="todo-list">' + l.todos.map((t, i) => (
           '<label class="' + (t.done ? "done" : "") + '">' +
@@ -115,13 +121,26 @@ window.SiteLogsTab = (function () {
         )).join("") + '</div>'
       : "";
     return (
+      '<div class="proj-line" style="font-weight:600;"><span>' + A.esc(A.projectNameOf(l)) + '</span>' +
+      '<button class="row-del" data-del-log="' + l.id + '" title="Delete">✕</button></div>' +
+      (l.weather ? '<div class="proj-line"><span>Weather</span><span>' + A.esc(l.weather) + '</span></div>' : "") +
+      (l.crew ? '<div class="proj-line"><span>Crew</span><span>' + A.esc(l.crew) + '</span></div>' : "") +
+      (l.notes ? '<p style="font-size:12.5px;color:var(--ink);margin:8px 0 0;">' + A.esc(l.notes) + '</p>' : "") +
+      todosHtml
+    );
+  }
+
+  function dayCardHtml(logs) {
+    const entriesHtml = logs.map((l, i) => (
+      '<div' + (i > 0 ? ' style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);"' : '') + '>' +
+        logEntryHtml(l) +
+      '</div>'
+    )).join("");
+    return (
       '<div class="emp-summary-block">' +
-        '<div class="head"><span>' + A.esc(A.fmtDate(l.logDate)) + ' — ' + A.esc(A.projectNameOf(l)) + '</span>' +
-        '<button class="row-del" data-del-log="' + l.id + '" title="Delete">✕</button></div>' +
-        (l.weather ? '<div class="proj-line"><span>Weather</span><span>' + A.esc(l.weather) + '</span></div>' : "") +
-        (l.crew ? '<div class="proj-line"><span>Crew</span><span>' + A.esc(l.crew) + '</span></div>' : "") +
-        (l.notes ? '<p style="font-size:12.5px;color:var(--ink);margin:8px 0 0;">' + A.esc(l.notes) + '</p>' : "") +
-        todosHtml +
+        '<div class="head"><span>' + A.esc(A.fmtDate(logs[0].logDate)) + '</span>' +
+        '<span class="hint">' + logs.length + ' project' + (logs.length === 1 ? "" : "s") + '</span></div>' +
+        entriesHtml +
       '</div>'
     );
   }
