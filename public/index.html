@@ -40,7 +40,7 @@
       <button class="nav-item" data-tab="dashboard" data-title="Dashboard 总览"><span class="nav-icon">⌂</span><span>Dashboard 总览</span></button>
       <button class="nav-item" data-tab="projects" data-title="Projects 项目"><span class="nav-icon">▣</span><span>Projects 项目</span></button>
       <div class="nav-label">Cost &amp; crew 成本与人工</div>
-      <button class="nav-item" data-tab="attendance" data-title="Attendance &amp; payroll 考勤与工资"><span class="nav-icon">◷</span><span>Attendance 考勤</span></button>
+      <button class="nav-item" data-tab="attendance" data-title="Work Log &amp; Payroll 工作日志与工资"><span class="nav-icon">◷</span><span>Work Log 工作日志</span></button>
       <button class="nav-item" data-tab="materials" data-title="Materials &amp; expenses 材料与花费"><span class="nav-icon">▤</span><span>Materials 材料</span></button>
       <div class="nav-label">Delivery 交付</div>
       <button class="nav-item" data-tab="stages" data-title="Inspections &amp; stage acceptance 验收与阶段确认"><span class="nav-icon">✓</span><span>Inspections 验收</span></button>
@@ -126,7 +126,7 @@
     <!-- ===================== Attendance ===================== -->
     <section class="tab-panel" id="panel-attendance">
       <div class="panel-head">
-        <h2>Attendance &amp; payroll 考勤与工资</h2>
+        <h2>Work Log &amp; Payroll 工作日志与工资</h2>
         <div class="head-controls">
           <label class="inline-field">Month
             <select id="attMonth"></select>
@@ -137,6 +137,9 @@
       <h3 class="section-divider">Site Logs 工地日志</h3>
       <p class="hint" style="margin:-8px 0 14px;">Log the day once — check off who's on site and it automatically fills in their attendance below.</p>
       <div class="head-controls" style="margin-bottom:14px;">
+        <label class="inline-field">Month
+          <select id="slgMonthFilter"></select>
+        </label>
         <label class="inline-field">Project
           <select id="slgProjectFilter"><option value="">All projects</option></select>
         </label>
@@ -165,7 +168,7 @@
         </form>
       </div>
 
-      <div id="slgList"></div>
+      <div id="slgList" class="slg-grid"></div>
 
       <h3 class="section-divider">Manual attendance correction 手动补录/修正</h3>
       <p class="hint" style="margin:-8px 0 14px;">For half days, overtime, or a day someone forgot to log — the site log above already covers full days automatically.</p>
