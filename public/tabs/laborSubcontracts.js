@@ -35,7 +35,7 @@ window.LaborSubcontractsTab = (function () {
     const list = await A.api("/labor-subcontracts");
     const tbody = document.querySelector("#lsTable tbody");
     if (!list.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No labor subcontracts logged yet.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No labor subcontracts logged yet.</td></tr>';
     } else {
       tbody.innerHTML = list.map((s) => (
         '<tr>' +
@@ -44,6 +44,7 @@ window.LaborSubcontractsTab = (function () {
           '<td class="amt num">' + A.fmtMoney(s.amount) + '</td>' +
           '<td>' + A.fmtDate(s.startDate) + '</td>' +
           '<td>' + (s.endDate ? A.fmtDate(s.endDate) : "") + '</td>' +
+          '<td><button class="payment-pill ' + (s.paymentStatus === "paid" ? "paid" : "unpaid") + '" data-id="' + s.id + '">' + (s.paymentStatus === "paid" ? "Paid" : "Unpaid") + '</button></td>' +
           '<td>' + A.esc(s.notes) + '</td>' +
           '<td><button class="row-del" data-id="' + s.id + '" title="Delete">✕</button></td>' +
         '</tr>'
@@ -51,6 +52,13 @@ window.LaborSubcontractsTab = (function () {
       tbody.querySelectorAll(".row-del").forEach((btn) => {
         btn.addEventListener("click", async () => {
           await A.api("/labor-subcontracts/" + btn.getAttribute("data-id"), { method: "DELETE" });
+          render();
+        });
+      });
+      tbody.querySelectorAll(".payment-pill").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const next = btn.classList.contains("paid") ? "unpaid" : "paid";
+          await A.api("/labor-subcontracts/" + btn.getAttribute("data-id"), { method: "PUT", body: { paymentStatus: next } });
           render();
         });
       });
