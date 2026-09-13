@@ -191,6 +191,11 @@ hr{ border:none; border-top:1px solid var(--line); }
 .stat-tile .note.good{ color:var(--good); font-weight:600; }
 
 .card-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+.slg-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; align-items:start; }
+@media (max-width: 1100px){ .slg-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width: 640px){ .slg-grid{ grid-template-columns:1fr; } }
+.slg-grid .emp-summary-block{ margin-bottom:0; }
+.slg-grid .empty-state{ grid-column:1 / -1; }
 .proj-card{ background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px 18px; box-shadow:var(--shadow); cursor:pointer; }
 .proj-card:hover{ border-color:var(--accent); }
 .proj-card h4{ font-size:14px; margin-bottom:2px; }
