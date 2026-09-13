@@ -67,6 +67,7 @@ window.AttendanceTab = (function () {
     renderSummary(summary);
     if (window.EmployeesTab) window.EmployeesTab.render();
     if (window.SiteLogsTab) window.SiteLogsTab.render();
+    if (window.LaborSubcontractsTab) window.LaborSubcontractsTab.render();
   }
 
   function renderTable(entries) {
