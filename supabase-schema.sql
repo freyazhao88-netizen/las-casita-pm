@@ -250,8 +250,16 @@ alter table materials add column if not exists adhoc_project_name text;
 -- compatibility with old free-text entries and printed/exported views.
 alter table site_logs add column if not exists crew_employee_ids jsonb not null default '[]'::jsonb;
 
--- Same one-off-project pattern for the manual attendance correction form. Employee
--- stays a required real record (payroll math needs it) — a genuinely new name there
--- creates a real employee instead of being stored as free text.
+-- Same one-off-project pattern for the manual attendance correction form.
 alter table attendance alter column project_id drop not null;
 alter table attendance add column if not exists adhoc_project_name text;
+
+-- Manual attendance corrections can also name a one-off helper who isn't a real
+-- employee — the wage for that entry is typed directly (not tied to any day rate),
+-- and the name is never turned into a real employee record.
+alter table attendance alter column employee_id drop not null;
+alter table attendance add column if not exists adhoc_employee_name text;
+
+-- Same one-off-project pattern for the "Log Today" site log entry.
+alter table site_logs alter column project_id drop not null;
+alter table site_logs add column if not exists adhoc_project_name text;
