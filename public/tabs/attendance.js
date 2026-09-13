@@ -17,37 +17,31 @@ window.AttendanceTab = (function () {
 
     document.getElementById("attDate").value = A.todayISO();
 
-    document.getElementById("attEmployee").addEventListener("input", (e) => {
-      const isNew = !A.findEmployeeByName(e.target.value) && e.target.value.trim();
-      document.getElementById("attNewEmployeeRateField").hidden = !isNew;
-    });
-
     document.getElementById("attForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const employeeInput = document.getElementById("attEmployee").value;
+      const employeeInput = document.getElementById("attEmployee").value.trim();
       const projectInput = A.resolveProjectInput(document.getElementById("attProject").value);
-      if (!employeeInput.trim()) { A.toast("Pick or type an employee"); return; }
+      if (!employeeInput) { A.toast("Pick or type an employee"); return; }
       if (!projectInput.projectId && !projectInput.adhocProjectName) { A.toast("Pick or type a project"); return; }
 
-      const isNewEmployee = !A.findEmployeeByName(employeeInput);
-      const newRate = document.getElementById("attNewEmployeeRate").value;
-      if (isNewEmployee && !newRate) { A.toast("Enter a day rate for this new person"); return; }
+      const days = Number(document.getElementById("attDays").value) || 0;
+      const amount = Number(document.getElementById("attAmount").value) || 0;
+      const rate = days > 0 ? amount / days : amount;
 
-      const employeeId = await A.resolveEmployeeInput(employeeInput, newRate);
-      const emp = A.state.employees.find((x) => x.id === employeeId);
+      const match = A.findEmployeeByName(employeeInput);
       const body = Object.assign({
         workDate: document.getElementById("attDate").value,
-        employeeId,
-        days: document.getElementById("attDays").value,
-        rate: emp ? emp.defaultDailyRate : 0,
+        employeeId: match ? match.id : null,
+        adhocEmployeeName: match ? "" : employeeInput,
+        days,
+        rate,
         notes: document.getElementById("attNotes").value
       }, projectInput);
       await A.api("/attendance", { method: "POST", body });
       document.getElementById("attEmployee").value = "";
       document.getElementById("attProject").value = "";
       document.getElementById("attNotes").value = "";
-      document.getElementById("attNewEmployeeRate").value = "";
-      document.getElementById("attNewEmployeeRateField").hidden = true;
+      document.getElementById("attAmount").value = "";
       A.toast("Entry added");
       render();
     });
@@ -82,7 +76,7 @@ window.AttendanceTab = (function () {
     tbody.innerHTML = entries.map((a) => (
       '<tr>' +
         '<td>' + A.fmtDate(a.workDate) + '</td>' +
-        '<td>' + A.esc(A.employeeName(a.employeeId)) + '</td>' +
+        '<td>' + A.esc(a.employeeId ? A.employeeName(a.employeeId) : (a.adhocEmployeeName || "One-off helper")) + '</td>' +
         '<td>' + A.esc(A.projectNameOf(a)) + '</td>' +
         '<td class="num">' + a.days + '</td>' +
         '<td><button class="row-del" data-id="' + a.id + '" title="Delete">✕</button></td>' +
@@ -108,7 +102,7 @@ window.AttendanceTab = (function () {
         e.byProject.map((bp) => (
           '<div class="proj-line"><span>' + A.esc(bp.projectName) + ' (' + bp.days + ' d)</span><span class="num">' + A.fmtMoney(bp.wage) + '</span></div>'
         )).join("") +
-        '<button class="btn btn-sm" data-stub="' + e.employeeId + '" style="margin-top:9px;width:100%;">🖨 Print pay stub</button>' +
+        (e.employeeId ? '<button class="btn btn-sm" data-stub="' + e.employeeId + '" style="margin-top:9px;width:100%;">🖨 Print pay stub</button>' : '<p class="hint" style="margin-top:9px;">One-off helper — not on payroll, no pay stub.</p>') +
       '</div>'
     )).join("") + (
       '<div class="emp-summary-block" style="background:transparent;border-style:dashed;">' +
