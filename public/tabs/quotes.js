@@ -168,7 +168,7 @@ window.QuotesTab = (function () {
     }
     tbody.innerHTML = list.map((q) => (
       '<tr>' +
-        '<td>' + A.esc(q.quoteDate || "") + '</td>' +
+        '<td>' + A.esc(A.fmtDate(q.quoteDate)) + '</td>' +
         '<td>' + A.esc(q.quoteNo || "") + '</td>' +
         '<td>' + A.esc(q.address || "") + '</td>' +
         '<td>' + A.esc(q.client || "") + '</td>' +
