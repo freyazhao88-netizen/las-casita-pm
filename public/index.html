@@ -151,7 +151,7 @@
         <div class="card-head"><h3>Log today</h3></div>
         <form id="slgForm" class="field-grid field-grid-3">
           <div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="slgDate" required></div>
-          <div class="field"><label>Project</label><select id="slgProject" required></select></div>
+          <div class="field"><label>Project</label><input type="text" id="slgProject" list="projectNameOptions" placeholder="Pick or type a project name" required></div>
           <div class="field"><label>Weather</label><input type="text" id="slgWeather" placeholder="e.g. Sunny, 75°F"></div>
           <div class="field span-full">
             <label>Crew present (checked = worked a full day today)</label>
@@ -172,18 +172,21 @@
 
       <div id="slgList" class="slg-grid"></div>
 
-      <h3 class="section-divider">Manual attendance correction 手动补录/修正</h3>
-      <p class="hint" style="margin:-8px 0 14px;">For half days, overtime, or a day someone forgot to log — the site log above already covers full days automatically.</p>
+      <h3 class="section-divider">Casual labor log 临时工记工</h3>
+      <p class="hint" style="margin:-8px 0 14px;">For casual day laborers whose crew changes daily — type a name and what you paid them, no need to add them to Employees. Also covers half days, overtime, or a day someone forgot to log (the site log above already covers full days automatically).</p>
       <div class="card">
         <div class="card-head"><h3>Log a work day</h3></div>
-        <form id="attForm" class="field-grid field-grid-4">
+        <form id="attForm" class="field-grid field-grid-5">
           <div class="field"><label>Date</label><input type="date" min="1970-01-01" max="2099-12-31" id="attDate" required></div>
-          <div class="field"><label>Employee</label><input type="text" id="attEmployee" list="employeeNameOptions" placeholder="Pick or type a name" required></div>
+          <div class="field"><label>Employee</label><input type="text" id="attEmployee" list="employeeNameOptions" placeholder="Pick, or type a one-off helper's name" required></div>
           <div class="field"><label>Project</label><input type="text" id="attProject" list="projectNameOptions" placeholder="Pick or type a project name" required></div>
           <div class="field"><label>Days</label><input type="number" id="attDays" step="0.25" min="0" value="1" required></div>
-          <div class="field" id="attNewEmployeeRateField" hidden><label>New person's day rate ($)</label><input type="number" id="attNewEmployeeRate" step="0.01" min="0"></div>
+          <div class="field"><label>Amount paid ($)</label><input type="number" id="attAmount" step="0.01" min="0" required></div>
           <div class="field span-full"><label>Notes (optional)</label><input type="text" id="attNotes" placeholder="e.g. half day, overtime"></div>
-          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add entry</button></div>
+          <div class="field span-full">
+            <button class="btn btn-primary" type="submit">+ Add / correct entry</button>
+            <p class="hint" style="margin-top:6px;">A typed name not in your employee list is logged as a one-off helper — it will NOT be added to the Employees database. Amount is whatever you paid for this entry, independent of anyone's usual day rate.</p>
+          </div>
         </form>
       </div>
 
