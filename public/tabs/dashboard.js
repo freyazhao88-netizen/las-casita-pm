@@ -44,23 +44,13 @@ window.DashboardTab = (function () {
 
     const receivablesTotal = projects.reduce((s, p) => s + p.summary.outstandingBalance, 0);
 
-    const scheduledCount = allStages.filter((s) => activeIds.has(s.projectId) && s.status === "scheduled").length;
-    const failedCount = allStages.filter((s) => activeIds.has(s.projectId) && s.status === "failed").length;
-
-    let stagesNote, stagesTone;
-    if (failedCount > 0) { stagesNote = failedCount + " failed inspection" + (failedCount === 1 ? "" : "s"); stagesTone = "warn"; }
-    else if (scheduledCount > 0) { stagesNote = "awaiting inspection"; stagesTone = ""; }
-    else { stagesNote = "all caught up"; stagesTone = "good"; }
-
     const monthLabel = monthLabelOf(month);
     document.getElementById("dashStats").innerHTML = [
-      tile("Active projects", activeProjects.length, "", "▣", projects.length + " total"),
       tile("Labor cost (" + monthLabel + ")", A.fmtMoney(monthLabor), "", "◷", "click for breakdown", "", "labor"),
       tile("Material cost (" + monthLabel + ")", A.fmtMoney(monthMaterialTotal), "", "▤", "click for breakdown", "", "material"),
       tile("Other expenses (" + monthLabel + ")", A.fmtMoney(monthExpenseTotal), "", "◈", "incl. warranty / repairs"),
       tile("应付款 Payables", A.fmtMoney(payablesTotal), "warm", "↥", "click for breakdown", "", "payables"),
-      tile("应收款 Receivables", A.fmtMoney(receivablesTotal), "warm", "↧", "click for breakdown", "", "receivables"),
-      tile("Inspections scheduled", String(scheduledCount), failedCount > 0 ? "warm" : "", "✓", stagesNote, stagesTone)
+      tile("应收款 Receivables", A.fmtMoney(receivablesTotal), "warm", "↧", "click for breakdown", "", "receivables")
     ].join("");
 
     document.getElementById("dashStats").querySelectorAll("[data-detail]").forEach((el) => {
