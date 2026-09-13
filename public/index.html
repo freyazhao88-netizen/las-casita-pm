@@ -190,6 +190,27 @@
         </form>
       </div>
 
+      <h3 class="section-divider">Labor subcontracts 人工总包</h3>
+      <p class="hint" style="margin:-8px 0 14px;">For a subcontractor paid a lump sum for a scope of work (e.g. foundation), not by the day — counts as labor cost for the project but isn't tied to any employee or payroll.</p>
+      <div class="card">
+        <div class="card-head"><h3>Log a subcontract</h3></div>
+        <form id="lsForm" class="field-grid field-grid-5">
+          <div class="field"><label>Project</label><input type="text" id="lsProject" list="projectNameOptions" placeholder="Pick or type a project name" required></div>
+          <div class="field span-2"><label>Description</label><input type="text" id="lsDescription" placeholder="e.g. Foundation" required></div>
+          <div class="field"><label>Total amount ($)</label><input type="number" id="lsAmount" step="0.01" min="0" required></div>
+          <div class="field"><label>Start date</label><input type="date" min="1970-01-01" max="2099-12-31" id="lsStartDate" required></div>
+          <div class="field"><label>End date (optional)</label><input type="date" min="1970-01-01" max="2099-12-31" id="lsEndDate"></div>
+          <div class="field span-full"><label>Notes (optional)</label><input type="text" id="lsNotes" placeholder="optional"></div>
+          <div class="field span-full"><button class="btn btn-primary" type="submit">+ Add subcontract</button></div>
+        </form>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Subcontracts</h3><span class="hint" id="lsTotalHint"></span></div>
+        <div class="table-wrap"><table class="data-table" id="lsTable"><thead><tr>
+          <th>Project</th><th>Description</th><th>Amount</th><th>Start</th><th>End</th><th>Notes</th><th></th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+
       <h3 class="section-divider">Attendance records 出勤记录</h3>
       <div class="two-col">
         <div class="card">
@@ -597,6 +618,7 @@
 <script src="/tabs/materials.js"></script>
 <script src="/tabs/employees.js"></script>
 <script src="/tabs/siteLogs.js"></script>
+<script src="/tabs/laborSubcontracts.js"></script>
 <script src="/tabs/stages.js"></script>
 <script src="/tabs/changeOrders.js"></script>
 <script src="/tabs/quotes.js"></script>
