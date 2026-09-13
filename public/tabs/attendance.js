@@ -17,22 +17,37 @@ window.AttendanceTab = (function () {
 
     document.getElementById("attDate").value = A.todayISO();
 
+    document.getElementById("attEmployee").addEventListener("input", (e) => {
+      const isNew = !A.findEmployeeByName(e.target.value) && e.target.value.trim();
+      document.getElementById("attNewEmployeeRateField").hidden = !isNew;
+    });
+
     document.getElementById("attForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const employeeId = document.getElementById("attEmployee").value;
-      const projectId = document.getElementById("attProject").value;
-      if (!employeeId || !projectId) { A.toast("Pick an employee and a project"); return; }
-      const emp = A.state.employees.find((x) => x.id === Number(employeeId));
-      const body = {
+      const employeeInput = document.getElementById("attEmployee").value;
+      const projectInput = A.resolveProjectInput(document.getElementById("attProject").value);
+      if (!employeeInput.trim()) { A.toast("Pick or type an employee"); return; }
+      if (!projectInput.projectId && !projectInput.adhocProjectName) { A.toast("Pick or type a project"); return; }
+
+      const isNewEmployee = !A.findEmployeeByName(employeeInput);
+      const newRate = document.getElementById("attNewEmployeeRate").value;
+      if (isNewEmployee && !newRate) { A.toast("Enter a day rate for this new person"); return; }
+
+      const employeeId = await A.resolveEmployeeInput(employeeInput, newRate);
+      const emp = A.state.employees.find((x) => x.id === employeeId);
+      const body = Object.assign({
         workDate: document.getElementById("attDate").value,
         employeeId,
-        projectId,
         days: document.getElementById("attDays").value,
         rate: emp ? emp.defaultDailyRate : 0,
         notes: document.getElementById("attNotes").value
-      };
+      }, projectInput);
       await A.api("/attendance", { method: "POST", body });
+      document.getElementById("attEmployee").value = "";
+      document.getElementById("attProject").value = "";
       document.getElementById("attNotes").value = "";
+      document.getElementById("attNewEmployeeRate").value = "";
+      document.getElementById("attNewEmployeeRateField").hidden = true;
       A.toast("Entry added");
       render();
     });
@@ -66,9 +81,9 @@ window.AttendanceTab = (function () {
     }
     tbody.innerHTML = entries.map((a) => (
       '<tr>' +
-        '<td>' + a.workDate + '</td>' +
+        '<td>' + A.fmtDate(a.workDate) + '</td>' +
         '<td>' + A.esc(A.employeeName(a.employeeId)) + '</td>' +
-        '<td>' + A.esc(A.projectName(a.projectId)) + '</td>' +
+        '<td>' + A.esc(A.projectNameOf(a)) + '</td>' +
         '<td class="num">' + a.days + '</td>' +
         '<td><button class="row-del" data-id="' + a.id + '" title="Delete">✕</button></td>' +
       '</tr>'
@@ -118,12 +133,11 @@ window.AttendanceTab = (function () {
 
     const total = entries.reduce((s, e) => s + e.cost, 0);
     const totalDays = entries.reduce((s, e) => s + (Number(e.days) || 0), 0);
-    const monthLabel = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1, 1)
-      .toLocaleDateString("en-US", { year: "numeric", month: "long" });
+    const monthLabel = month.slice(5, 7) + "/" + month.slice(0, 4);
 
     const rowsHtml = entries.map((e) => (
-      '<tr><td class="cat">' + A.esc(e.workDate) + '</td>' +
-        '<td class="desc">' + A.esc(A.projectName(e.projectId)) + '</td>' +
+      '<tr><td class="cat">' + A.esc(A.fmtDate(e.workDate)) + '</td>' +
+        '<td class="desc">' + A.esc(A.projectNameOf(e)) + '</td>' +
         '<td class="amt num">' + e.days + '</td>' +
         '<td class="amt num">' + A.fmtMoney(e.rate) + '</td>' +
         '<td class="amt num">' + A.fmtMoney(e.cost) + '</td>' +
