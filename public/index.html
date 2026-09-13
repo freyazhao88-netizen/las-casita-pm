@@ -49,6 +49,7 @@
       <button class="nav-item" data-tab="quotes" data-title="Quotes / Contracts 报价/合同"><span class="nav-icon">▱</span><span>Quotes / Contracts 报价/合同</span></button>
       <div class="nav-label">Billing 账务</div>
       <button class="nav-item" data-tab="payments" data-title="Payments 收付款"><span class="nav-icon">$</span><span>Payments 收付款</span></button>
+      <button class="nav-item" data-tab="smalljobs" data-title="Small jobs 零星项目"><span class="nav-icon">◆</span><span>Small Jobs 零星项目</span></button>
     </nav>
     <div class="sidebar-bottom">Las Casita Inc.<br><span class="dim">Project Manager 项目管理</span></div>
   </aside>
@@ -520,6 +521,15 @@
       </div>
     </section>
 
+    <!-- ===================== Small jobs ===================== -->
+    <section class="tab-panel" id="panel-smalljobs">
+      <div class="panel-head">
+        <h2>Small jobs 零星项目</h2>
+        <p class="hint">One-off jobs with no contract — grouped by the job name you typed on each payment, material, expense, or work-log entry.</p>
+      </div>
+      <div id="smallJobsList" class="card-grid"></div>
+    </section>
+
   </main>
   </div>
 </div>
@@ -588,6 +598,7 @@
 <script src="/tabs/changeOrders.js"></script>
 <script src="/tabs/quotes.js"></script>
 <script src="/tabs/payments.js"></script>
+<script src="/tabs/smallJobs.js"></script>
 <script src="/init.js"></script>
 </body>
 </html>
