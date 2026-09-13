@@ -170,7 +170,6 @@ window.App = (function () {
     populateSelect(document.getElementById("expProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
     const nameOptions = document.getElementById("projectNameOptions");
     if (nameOptions) nameOptions.innerHTML = active.map((p) => '<option value="' + esc(p.name) + '">').join("");
-    populateSelect(document.getElementById("slgProject"), active, (p) => p.id, (p) => p.name);
     populateSelect(document.getElementById("slgProjectFilter"), active, (p) => p.id, (p) => p.name, "All projects");
   }
 
@@ -200,23 +199,11 @@ window.App = (function () {
   }
 
   // Resolves a typed employee-name string to an existing employee's id when it matches
-  // one exactly. Unlike projects, attendance/payroll needs a real employee record (for
-  // rate history and wage balances), so a genuinely new name creates one on the fly —
-  // it's never left as free-floating "ad-hoc" text.
+  // one exactly; a name with no match is left as free-floating ad-hoc text (a one-off
+  // helper) rather than creating a real employee record.
   function findEmployeeByName(typedName) {
     const name = (typedName || "").trim();
     return state.employees.find((e) => e.name === name) || null;
-  }
-  async function resolveEmployeeInput(typedName, newRate) {
-    const name = (typedName || "").trim();
-    if (!name) return null;
-    const match = findEmployeeByName(name);
-    if (match) return match.id;
-    const rec = await api("/employees", { method: "POST", body: { name, defaultDailyRate: newRate || 0 } });
-    state.employees.push(rec);
-    const empNameOptions = document.getElementById("employeeNameOptions");
-    if (empNameOptions) empNameOptions.innerHTML += '<option value="' + esc(rec.name) + '">';
-    return rec.id;
   }
 
   function switchTab(name) {
@@ -240,6 +227,6 @@ window.App = (function () {
   return {
     fmtMoney, fmtDate, esc, toast, api, currentMonth, todayISO, populateMonthSelect,
     state, loadCoreData, populateSelect, populateProjectSelects,
-    projectName, projectNameOf, resolveProjectInput, employeeName, findEmployeeByName, resolveEmployeeInput, switchTab, showPrintSheet, showDetailModal
+    projectName, projectNameOf, resolveProjectInput, employeeName, findEmployeeByName, switchTab, showPrintSheet, showDetailModal
   };
 })();
