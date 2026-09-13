@@ -41,16 +41,17 @@ window.SiteLogsTab = (function () {
     document.getElementById("slgForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const crewEmployeeIds = [...document.querySelectorAll(".slg-crew-cb:checked")].map((cb) => Number(cb.value));
-      const body = {
+      const projectInput = A.resolveProjectInput(document.getElementById("slgProject").value);
+      if (!projectInput.projectId && !projectInput.adhocProjectName) { A.toast("Pick or type a project"); return; }
+      const body = Object.assign({
         logDate: document.getElementById("slgDate").value,
-        projectId: document.getElementById("slgProject").value,
         weather: document.getElementById("slgWeather").value,
         crewEmployeeIds,
         notes: document.getElementById("slgNotes").value,
         todos: pendingTodos.map((t) => ({ text: t, done: false }))
-      };
-      if (!body.projectId) { A.toast("Pick a project"); return; }
+      }, projectInput);
       await A.api("/site-logs", { method: "POST", body });
+      document.getElementById("slgProject").value = "";
       document.getElementById("slgWeather").value = "";
       document.getElementById("slgNotes").value = "";
       document.querySelectorAll(".slg-crew-cb:checked").forEach((cb) => { cb.checked = false; });
@@ -115,7 +116,7 @@ window.SiteLogsTab = (function () {
       : "";
     return (
       '<div class="emp-summary-block">' +
-        '<div class="head"><span>' + A.esc(A.fmtDate(l.logDate)) + ' — ' + A.esc(A.projectName(l.projectId)) + '</span>' +
+        '<div class="head"><span>' + A.esc(A.fmtDate(l.logDate)) + ' — ' + A.esc(A.projectNameOf(l)) + '</span>' +
         '<button class="row-del" data-del-log="' + l.id + '" title="Delete">✕</button></div>' +
         (l.weather ? '<div class="proj-line"><span>Weather</span><span>' + A.esc(l.weather) + '</span></div>' : "") +
         (l.crew ? '<div class="proj-line"><span>Crew</span><span>' + A.esc(l.crew) + '</span></div>' : "") +
