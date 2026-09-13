@@ -85,14 +85,18 @@ router.get("/attendance/summary", async (req, res, next) => {
     ]);
     const entries = allAttendance.filter((a) => inMonth(a.workDate, month));
     const byEmployee = {};
+    // Case/whitespace-insensitive so a casual worker's name typed slightly
+    // differently on different days ("Xiao Zhang" vs "xiao zhang") still lands
+    // in one bucket — same fix as the Small Jobs grouping.
+    const normKey = (name) => (name || "").trim().toLowerCase();
 
     entries.forEach((a) => {
-      const empKey = a.employeeId || ("adhoc:" + (a.adhocEmployeeName || ""));
+      const empKey = a.employeeId || ("adhoc:" + normKey(a.adhocEmployeeName));
       if (!byEmployee[empKey]) {
         const emp = a.employeeId ? employees.find((e) => e.id === a.employeeId) : null;
         byEmployee[empKey] = {
           employeeId: a.employeeId || null,
-          employeeName: a.employeeId ? (emp ? emp.name : "Unknown") : (a.adhocEmployeeName || "One-off helper"),
+          employeeName: a.employeeId ? (emp ? emp.name : "Unknown") : ((a.adhocEmployeeName || "").trim() || "One-off helper"),
           totalDays: 0,
           totalWage: 0,
           byProject: {}
@@ -102,7 +106,7 @@ router.get("/attendance/summary", async (req, res, next) => {
       const cost = entryCost(a);
       bucket.totalDays += Number(a.days) || 0;
       bucket.totalWage += cost;
-      const projKey = a.projectId || ("adhoc:" + (a.adhocProjectName || ""));
+      const projKey = a.projectId || ("adhoc:" + normKey(a.adhocProjectName));
       if (!bucket.byProject[projKey]) {
         const proj = a.projectId ? projects.find((p) => p.id === a.projectId) : null;
         bucket.byProject[projKey] = {
