@@ -233,6 +233,7 @@ window.App = (function () {
     if (window.ChangeOrdersTab && name === "changeorders") window.ChangeOrdersTab.render();
     if (window.PaymentsTab && name === "payments") window.PaymentsTab.render();
     if (window.QuotesTab && name === "quotes") window.QuotesTab.render();
+    if (window.SmallJobsTab && name === "smalljobs") window.SmallJobsTab.render();
     try { localStorage.setItem("lc-active-tab", name); } catch (e) {}
   }
 
