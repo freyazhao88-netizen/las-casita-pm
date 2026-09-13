@@ -243,3 +243,9 @@ alter table payments add column if not exists adhoc_project_name text;
 -- Same for material purchases.
 alter table materials alter column project_id drop not null;
 alter table materials add column if not exists adhoc_project_name text;
+
+-- Site logs' crew, tied to real employee records so saving a log can auto-create
+-- that day's attendance for each crew member. The existing "crew" text column is kept
+-- as a human-readable, auto-generated summary (comma-joined names) for backward
+-- compatibility with old free-text entries and printed/exported views.
+alter table site_logs add column if not exists crew_employee_ids jsonb not null default '[]'::jsonb;
