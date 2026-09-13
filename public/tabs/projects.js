@@ -64,11 +64,12 @@ window.ProjectsTab = (function () {
       detailHost.innerHTML = '<div class="empty-state">Select a project on the left, or create a new one.</div>';
       return;
     }
-    let stages, warranties;
+    let stages, warranties, quotesForProject;
     try {
-      [stages, warranties] = await Promise.all([
+      [stages, warranties, quotesForProject] = await Promise.all([
         A.api("/projects/" + project.id + "/stages"),
-        A.api("/warranties?projectId=" + project.id)
+        A.api("/warranties?projectId=" + project.id),
+        A.api("/quotes?projectId=" + project.id)
       ]);
     } catch (e) {
       if (myToken !== renderToken) return;
@@ -78,8 +79,8 @@ window.ProjectsTab = (function () {
       return;
     }
     if (myToken !== renderToken) return;
-    detailHost.innerHTML = detailHtml(project, stages, warranties);
-    bindDetail(project, stages, warranties);
+    detailHost.innerHTML = detailHtml(project, stages, warranties, quotesForProject);
+    bindDetail(project, stages, warranties, quotesForProject);
   }
 
   function selectAndOpen(id) { selectedId = id; creating = false; render(); }
@@ -129,7 +130,7 @@ window.ProjectsTab = (function () {
     });
   }
 
-  function detailHtml(p, stages, warranties) {
+  function detailHtml(p, stages, warranties, quotesForProject) {
     const s = p.summary;
     return (
       '<div class="detail-header">' +
@@ -171,6 +172,14 @@ window.ProjectsTab = (function () {
       '</div>' +
 
       '<div class="card">' +
+        '<div class="card-head"><h3>Quote / Contract 报价/合同</h3><span class="hint">' + (quotesForProject.length ? quotesForProject.length + ' on file' : 'None yet') + '</span></div>' +
+        (quotesForProject.length
+          ? quotesForProject.map(quoteLine).join("")
+          : '<div class="empty-state">This project started without a formal quote/contract — that\'s fine, you can create one anytime.</div>') +
+        '<button class="btn btn-sm" id="btnNewQuoteForProject" type="button" style="margin-top:12px;">+ ' + (quotesForProject.length ? "New quote" : "Create a quote") + '</button>' +
+      '</div>' +
+
+      '<div class="card">' +
         '<div class="card-head"><h3>Inspections</h3><span class="hint">' + stages.length + ' logged for this project</span></div>' +
         (stages.length ? summaryLine(stages) : '<div class="empty-state">No inspections logged yet for this project.</div>') +
         '<button class="btn btn-sm" id="btnViewInspections" type="button" style="margin-top:12px;">View / add inspections →</button>' +
@@ -188,6 +197,20 @@ window.ProjectsTab = (function () {
           '<div class="field"><label>Notes</label><input type="text" id="wtyNotes" placeholder="optional"></div>' +
           '<div class="field span-full"><button class="btn btn-sm" type="submit">+ Add warranty</button></div>' +
         '</form>' +
+      '</div>'
+    );
+  }
+
+  function quoteLine(q) {
+    const badgeClass = q.status === "signed" ? "passed" : q.status === "sent" ? "scheduled" : "";
+    return (
+      '<div class="proj-line" style="align-items:flex-start;padding:8px 0;">' +
+        '<span>' +
+          '<strong>' + A.esc(q.quoteNo || "Untitled quote") + '</strong> ' +
+          '<span class="badge ' + badgeClass + '">' + A.esc(q.status || "draft") + '</span><br>' +
+          '<small style="color:var(--muted);">' + A.esc(A.fmtDate(q.quoteDate)) + ' · ' + A.fmtMoney(q.total) + '</small>' +
+        '</span>' +
+        '<button class="btn btn-sm" data-open-quote="' + q.id + '" type="button">Open →</button>' +
       '</div>'
     );
   }
@@ -233,7 +256,18 @@ window.ProjectsTab = (function () {
     return '<div class="tile"><div class="label">' + A.esc(label) + '</div><div class="value num">' + value + '</div></div>';
   }
 
-  function bindDetail(p, stages, warranties) {
+  function bindDetail(p, stages, warranties, quotesForProject) {
+    document.getElementById("btnNewQuoteForProject").addEventListener("click", () => {
+      window.QuotesTab.newQuoteForProject(p.id);
+      A.switchTab("quotes");
+    });
+    document.querySelectorAll("[data-open-quote]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        window.QuotesTab.openQuote(Number(btn.getAttribute("data-open-quote")));
+        A.switchTab("quotes");
+      });
+    });
+
     document.getElementById("btnDeleteProject").addEventListener("click", async () => {
       if (!confirm('Delete project "' + p.name + '" and all its attendance, materials, stages, and quotes? This cannot be undone.')) return;
       await A.api("/projects/" + p.id, { method: "DELETE" });
