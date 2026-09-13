@@ -24,15 +24,18 @@ router.get("/attendance", async (req, res, next) => {
 
 router.post("/attendance", async (req, res, next) => {
   try {
-    const { employeeId, projectId, workDate, days, rate, notes } = req.body || {};
-    if (!employeeId || !projectId || !workDate) {
-      return res.status(400).json({ error: "employeeId, projectId, and workDate are required" });
+    const { employeeId, projectId, adhocProjectName, workDate, days, rate, notes } = req.body || {};
+    if (!employeeId || !workDate) {
+      return res.status(400).json({ error: "employeeId and workDate are required" });
     }
+    const cleanAdhoc = (adhocProjectName || "").trim();
+    if (!projectId && !cleanAdhoc) return res.status(400).json({ error: "Pick a project or type a one-off job name" });
     if (!(await db.find("employees", employeeId))) return res.status(400).json({ error: "Unknown employee" });
-    if (!(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
+    if (projectId && !(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
     const rec = await db.insert("attendance", {
       employeeId: Number(employeeId),
-      projectId: Number(projectId),
+      projectId: projectId ? Number(projectId) : null,
+      adhocProjectName: projectId ? "" : cleanAdhoc,
       workDate,
       days: days === undefined || days === "" ? 1 : Number(days),
       rate: Number(rate) || 0,
@@ -48,7 +51,8 @@ router.put("/attendance/:id", async (req, res, next) => {
     if (!rec) return res.status(404).json({ error: "Not found" });
     const patch = {};
     if ("employeeId" in req.body) patch.employeeId = Number(req.body.employeeId);
-    if ("projectId" in req.body) patch.projectId = Number(req.body.projectId);
+    if ("projectId" in req.body) patch.projectId = req.body.projectId ? Number(req.body.projectId) : null;
+    if ("adhocProjectName" in req.body) patch.adhocProjectName = req.body.adhocProjectName;
     if ("workDate" in req.body) patch.workDate = req.body.workDate;
     if ("days" in req.body) patch.days = Number(req.body.days);
     if ("rate" in req.body) patch.rate = Number(req.body.rate);
@@ -95,17 +99,18 @@ router.get("/attendance/summary", async (req, res, next) => {
       const cost = entryCost(a);
       bucket.totalDays += Number(a.days) || 0;
       bucket.totalWage += cost;
-      if (!bucket.byProject[a.projectId]) {
-        const proj = projects.find((p) => p.id === a.projectId);
-        bucket.byProject[a.projectId] = {
-          projectId: a.projectId,
-          projectName: proj ? proj.name : "Unknown",
+      const key = a.projectId || ("adhoc:" + (a.adhocProjectName || ""));
+      if (!bucket.byProject[key]) {
+        const proj = a.projectId ? projects.find((p) => p.id === a.projectId) : null;
+        bucket.byProject[key] = {
+          projectId: a.projectId || null,
+          projectName: a.projectId ? (proj ? proj.name : "Unknown") : (a.adhocProjectName || "One-off job"),
           days: 0,
           wage: 0
         };
       }
-      bucket.byProject[a.projectId].days += Number(a.days) || 0;
-      bucket.byProject[a.projectId].wage += cost;
+      bucket.byProject[key].days += Number(a.days) || 0;
+      bucket.byProject[key].wage += cost;
     });
 
     const result = Object.values(byEmployee).map((b) => ({
