@@ -249,3 +249,9 @@ alter table materials add column if not exists adhoc_project_name text;
 -- as a human-readable, auto-generated summary (comma-joined names) for backward
 -- compatibility with old free-text entries and printed/exported views.
 alter table site_logs add column if not exists crew_employee_ids jsonb not null default '[]'::jsonb;
+
+-- Same one-off-project pattern for the manual attendance correction form. Employee
+-- stays a required real record (payroll math needs it) — a genuinely new name there
+-- creates a real employee instead of being stored as free text.
+alter table attendance alter column project_id drop not null;
+alter table attendance add column if not exists adhoc_project_name text;
