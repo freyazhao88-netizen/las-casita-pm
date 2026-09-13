@@ -6,10 +6,11 @@ const router = express.Router();
 
 router.get("/labor-subcontracts", async (req, res, next) => {
   try {
-    const { projectId, month } = req.query;
+    const { projectId, month, paymentStatus } = req.query;
     let list = await db.all("laborSubcontracts");
     if (projectId) list = list.filter((s) => s.projectId === Number(projectId));
     if (month) list = list.filter((s) => s.startDate && s.startDate.slice(0, 7) === month);
+    if (paymentStatus) list = list.filter((s) => s.paymentStatus === paymentStatus);
     list.sort((a, b) => (b.startDate || "").localeCompare(a.startDate || ""));
     res.json(list);
   } catch (e) { next(e); }
@@ -31,7 +32,8 @@ router.post("/labor-subcontracts", async (req, res, next) => {
       amount: Number(amount) || 0,
       startDate,
       endDate: endDate || null,
-      notes: notes || ""
+      notes: notes || "",
+      paymentStatus: "unpaid"
     });
     res.status(201).json(rec);
   } catch (e) { next(e); }
@@ -42,7 +44,7 @@ router.put("/labor-subcontracts/:id", async (req, res, next) => {
     const rec = await db.find("laborSubcontracts", req.params.id);
     if (!rec) return res.status(404).json({ error: "Not found" });
     const patch = {};
-    ["description", "startDate", "endDate", "notes", "adhocProjectName"].forEach((k) => {
+    ["description", "startDate", "endDate", "notes", "adhocProjectName", "paymentStatus"].forEach((k) => {
       if (k in req.body) patch[k] = req.body[k];
     });
     if ("amount" in req.body) patch.amount = Number(req.body.amount) || 0;
