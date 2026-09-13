@@ -38,10 +38,11 @@ window.SmallJobsTab = (function () {
     const html =
       '<form id="sjInfoForm" style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line);">' +
         '<div class="field-grid field-grid-3">' +
-          '<div class="field"><label>Contact person</label><input type="text" id="sjContact" value="' + A.esc(job.contactName || "") + '"></div>' +
+          '<div class="field"><label>Client name 客户姓名</label><input type="text" id="sjClient" value="' + A.esc(job.clientName || "") + '"></div>' +
+          '<div class="field"><label>Project manager 项目负责人</label><input type="text" id="sjManager" value="' + A.esc(job.managerName || "") + '"></div>' +
           '<div class="field"><label>Phone</label><input type="text" id="sjPhone" value="' + A.esc(job.phone || "") + '"></div>' +
-          '<div class="field span-2"><label>Address</label><input type="text" id="sjAddress" value="' + A.esc(job.address || "") + '"></div>' +
         '</div>' +
+        '<div class="field" style="margin-top:10px;"><label>Address</label><input type="text" id="sjAddress" value="' + A.esc(job.address || "") + '"></div>' +
         '<div class="field" style="margin-top:10px;"><label>Notes</label><textarea id="sjNotes" rows="2">' + A.esc(job.notes || "") + '</textarea></div>' +
         '<button class="btn btn-sm" type="submit" style="margin-top:10px;">Save info</button>' +
       '</form>' +
@@ -56,7 +57,8 @@ window.SmallJobsTab = (function () {
       await A.api("/small-jobs/" + encodeURIComponent(job.name) + "/info", {
         method: "PUT",
         body: {
-          contactName: document.getElementById("sjContact").value,
+          clientName: document.getElementById("sjClient").value,
+          managerName: document.getElementById("sjManager").value,
           phone: document.getElementById("sjPhone").value,
           address: document.getElementById("sjAddress").value,
           notes: document.getElementById("sjNotes").value
