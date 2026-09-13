@@ -26,7 +26,8 @@ const TABLES = {
   expenses: "expenses",
   siteLogs: "site_logs",
   warranties: "warranties",
-  laborSubcontracts: "labor_subcontracts"
+  laborSubcontracts: "labor_subcontracts",
+  smallJobInfo: "small_jobs"
 };
 
 const DEFAULT_STAGE_SUGGESTIONS = [
