@@ -117,6 +117,7 @@ window.AttendanceTab = (function () {
     entries.sort((a, b) => a.workDate.localeCompare(b.workDate));
 
     const total = entries.reduce((s, e) => s + e.cost, 0);
+    const totalDays = entries.reduce((s, e) => s + (Number(e.days) || 0), 0);
     const monthLabel = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1, 1)
       .toLocaleDateString("en-US", { year: "numeric", month: "long" });
 
@@ -141,7 +142,7 @@ window.AttendanceTab = (function () {
       '</div>' +
       '<table class="qs-table"><thead><tr><th>Date</th><th>Project</th><th class="amt">Days</th><th class="amt">Rate</th><th class="amt">Amount</th></tr></thead>' +
       '<tbody>' + rowsHtml +
-      '<tr class="qs-total-row"><td colspan="4">Total this period</td><td class="amt num">' + A.fmtMoney(total) + '</td></tr>' +
+      '<tr class="qs-total-row"><td colspan="2">Total this period</td><td class="amt num">' + totalDays + '</td><td></td><td class="amt num">' + A.fmtMoney(total) + '</td></tr>' +
       '</tbody></table>' +
       (balance ? '<p class="qs-term">Balance owed as of today (all wages earned minus all payments and advances made, all-time): <strong class="num">' + A.fmtMoney(balance.balance) + '</strong></p>' : '') +
       '<p class="qs-auth">I confirm the days, projects, and amounts listed above are accurate for this pay period.</p>' +
