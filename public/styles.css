@@ -196,6 +196,8 @@ hr{ border:none; border-top:1px solid var(--line); }
 @media (max-width: 640px){ .slg-grid{ grid-template-columns:1fr; } }
 .slg-grid .emp-summary-block{ margin-bottom:0; }
 .slg-grid .empty-state{ grid-column:1 / -1; }
+.slg-day summary{ list-style:none; }
+.slg-day summary::-webkit-details-marker{ display:none; }
 .proj-card{ background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px 18px; box-shadow:var(--shadow); cursor:pointer; }
 .proj-card:hover{ border-color:var(--accent); }
 .proj-card h4{ font-size:14px; margin-bottom:2px; }
