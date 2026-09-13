@@ -146,10 +146,10 @@ window.ProjectsTab = (function () {
         tile("Total spend", A.fmtMoney(s.grandTotal)) +
         tile("Quote / Contract total", A.fmtMoney(s.quotedTotal)) +
         tile("Change orders", (s.approvedChangeOrdersTotal >= 0 ? "+" : "") + A.fmtMoney(s.approvedChangeOrdersTotal)) +
-        tile("Total contract amount", A.fmtMoney(s.effectiveQuotedTotal)) +
-        tile("Profit margin", (s.profitMargin >= 0 ? "+" : "") + A.fmtMoney(s.profitMargin)) +
+        tile("Total contract amount", A.fmtMoney(s.effectiveQuotedTotal), "var(--bad)") +
+        tile("Profit margin", (s.profitMargin >= 0 ? "+" : "") + A.fmtMoney(s.profitMargin), "var(--good)") +
         tile("Received from client", A.fmtMoney(s.amountReceived)) +
-        tile("Outstanding balance", A.fmtMoney(s.outstandingBalance)) +
+        tile("Outstanding balance", A.fmtMoney(s.outstandingBalance), "var(--accent-warm)") +
         tile("Stage progress", s.stageProgress.passed + " / " + s.stageProgress.total) +
       '</div>' +
 
@@ -275,8 +275,8 @@ window.ProjectsTab = (function () {
     );
   }
 
-  function tile(label, value) {
-    return '<div class="tile"><div class="label">' + A.esc(label) + '</div><div class="value num">' + value + '</div></div>';
+  function tile(label, value, color) {
+    return '<div class="tile"><div class="label">' + A.esc(label) + '</div><div class="value num"' + (color ? ' style="color:' + color + ';"' : '') + '>' + value + '</div></div>';
   }
 
   function bindDetail(p, stages, warranties, quotesForProject, changeOrdersForProject) {
