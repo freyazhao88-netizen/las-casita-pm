@@ -13,9 +13,10 @@ window.DashboardTab = (function () {
   async function render() {
     bindOnce();
     const month = document.getElementById("dashMonth").value || A.currentMonth();
-    const [projects, monthAttendance, monthMaterials, allMaterials, allExpenses, allStages, openTodos, paymentReminders] = await Promise.all([
+    const [projects, monthAttendance, monthLaborSubs, monthMaterials, allMaterials, allExpenses, allStages, openTodos, paymentReminders] = await Promise.all([
       A.api("/projects?summary=1"),
       A.api("/attendance?month=" + month),
+      A.api("/labor-subcontracts?month=" + month),
       A.api("/materials?month=" + month),
       A.api("/materials"),
       A.api("/expenses"),
@@ -31,7 +32,9 @@ window.DashboardTab = (function () {
 
     // Deliberately NOT filtered to active projects — "money spent this month" is a cash-flow
     // question that includes things like warranty repairs billed against a completed project.
-    const monthLabor = monthAttendance.reduce((s, a) => s + (Number(a.days) || 0) * (Number(a.rate) || 0), 0);
+    const laborEntries = monthAttendance.concat(monthLaborSubs);
+    const laborAmountOf = (e) => (e.days !== undefined ? (Number(e.days) || 0) * (Number(e.rate) || 0) : (Number(e.amount) || 0));
+    const monthLabor = laborEntries.reduce((s, e) => s + laborAmountOf(e), 0);
     const monthMaterialTotal = monthMaterials.reduce((s, m) => s + (Number(m.amount) || 0), 0);
     const monthExpenses = allExpenses.filter((e) => e.expenseDate && e.expenseDate.slice(0, 7) === month);
     const monthExpenseTotal = monthExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
@@ -57,7 +60,7 @@ window.DashboardTab = (function () {
         const kind = el.getAttribute("data-detail");
         if (kind === "payables") showPayablesDetail(unpaidMaterials, unpaidExpenses, payablesTotal);
         else if (kind === "receivables") showReceivablesDetail(projects, receivablesTotal);
-        else if (kind === "labor") showByProjectDetail("Labor cost — " + monthLabel, monthAttendance, (a) => (Number(a.days) || 0) * (Number(a.rate) || 0), monthLabor);
+        else if (kind === "labor") showByProjectDetail("Labor cost — " + monthLabel, laborEntries, laborAmountOf, monthLabor);
         else if (kind === "material") showByProjectDetail("Material cost — " + monthLabel, monthMaterials, (m) => Number(m.amount) || 0, monthMaterialTotal);
         else if (kind === "expense") showByProjectDetail("Other expenses — " + monthLabel, monthExpenses, (e) => Number(e.amount) || 0, monthExpenseTotal);
       });
