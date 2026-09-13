@@ -20,8 +20,9 @@ function stageProgressOf(stages) {
   return { total, passed, percent: total ? Math.round((passed / total) * 100) : 0 };
 }
 
-function summaryOf(project, attendanceForProject, materialsForProject, stagesForProject, changeOrdersForProject, paymentsForProject, expensesForProject) {
-  const laborTotal = attendanceForProject.reduce((sum, a) => sum + entryCost(a), 0);
+function summaryOf(project, attendanceForProject, materialsForProject, stagesForProject, changeOrdersForProject, paymentsForProject, expensesForProject, laborSubcontractsForProject) {
+  const laborSubTotal = (laborSubcontractsForProject || []).reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+  const laborTotal = attendanceForProject.reduce((sum, a) => sum + entryCost(a), 0) + laborSubTotal;
   const materialsTotal = materialsForProject.reduce((sum, m) => sum + (Number(m.amount) || 0), 0);
   const otherExpensesTotal = (expensesForProject || []).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const approvedChangeOrdersTotal = changeOrdersForProject
@@ -34,6 +35,7 @@ function summaryOf(project, attendanceForProject, materialsForProject, stagesFor
   return {
     projectId: project.id,
     laborTotal,
+    laborSubTotal,
     materialsTotal,
     otherExpensesTotal,
     grandTotal: costTotal,
@@ -50,13 +52,14 @@ function summaryOf(project, attendanceForProject, materialsForProject, stagesFor
 
 // One project's summary — a handful of filtered queries, fine for a single lookup.
 async function computeProjectSummary(project) {
-  const [attendance, materials, stages, changeOrders, payments, expenses] = await Promise.all([
+  const [attendance, materials, stages, changeOrders, payments, expenses, laborSubcontracts] = await Promise.all([
     db.all("attendance"),
     db.all("materials"),
     db.all("stages"),
     db.all("changeOrders"),
     db.all("payments"),
-    db.all("expenses")
+    db.all("expenses"),
+    db.all("laborSubcontracts")
   ]);
   return summaryOf(
     project,
@@ -65,20 +68,22 @@ async function computeProjectSummary(project) {
     stages.filter((s) => s.projectId === project.id),
     changeOrders.filter((c) => c.projectId === project.id),
     payments.filter((p) => p.projectId === project.id),
-    expenses.filter((e) => e.projectId === project.id)
+    expenses.filter((e) => e.projectId === project.id),
+    laborSubcontracts.filter((s) => s.projectId === project.id)
   );
 }
 
 // All projects at once — fetches each table once, then groups in memory
 // (avoids N+1 round trips to Supabase when listing the whole portfolio).
 async function computeAllSummaries(projects) {
-  const [attendance, materials, stages, changeOrders, payments, expenses] = await Promise.all([
+  const [attendance, materials, stages, changeOrders, payments, expenses, laborSubcontracts] = await Promise.all([
     db.all("attendance"),
     db.all("materials"),
     db.all("stages"),
     db.all("changeOrders"),
     db.all("payments"),
-    db.all("expenses")
+    db.all("expenses"),
+    db.all("laborSubcontracts")
   ]);
   const byId = {};
   projects.forEach((p) => {
@@ -89,7 +94,8 @@ async function computeAllSummaries(projects) {
       stages.filter((s) => s.projectId === p.id),
       changeOrders.filter((c) => c.projectId === p.id),
       payments.filter((pay) => pay.projectId === p.id),
-      expenses.filter((e) => e.projectId === p.id)
+      expenses.filter((e) => e.projectId === p.id),
+      laborSubcontracts.filter((s) => s.projectId === p.id)
     );
   });
   return byId;
