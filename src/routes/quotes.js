@@ -51,7 +51,15 @@ function withMeta(row) {
 // that project's contract amount (quoted_total) — the baseline change orders build on.
 async function syncToProjectIfSigned(row) {
   if (row.status === "signed" && row.projectId) {
-    await db.update("projects", row.projectId, { quotedTotal: computeTotal(row.items) });
+    const patch = { quotedTotal: computeTotal(row.items) };
+    // A signed contract is the authoritative version of these details — only overwrite
+    // the project's own fields when the contract actually specifies them, so an unrelated
+    // blank field on the quote never blanks out something already on the project.
+    if (row.clientName) patch.clientName = row.clientName;
+    if (row.address) patch.address = row.address;
+    if (row.startDate) patch.startDate = row.startDate;
+    if (row.estEndDate) patch.estEndDate = row.estEndDate;
+    await db.update("projects", row.projectId, patch);
   }
 }
 
