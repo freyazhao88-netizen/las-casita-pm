@@ -69,7 +69,7 @@ window.ChangeOrdersTab = (function () {
     }
     tbody.innerHTML = list.map((o) => (
       '<tr>' +
-        '<td>' + A.esc(o.orderDate || "") + '</td>' +
+        '<td>' + A.esc(A.fmtDate(o.orderDate)) + '</td>' +
         '<td>' + A.esc(o.orderNo || "") + '</td>' +
         '<td>' + A.esc(o.projectName || "") + '</td>' +
         '<td>' + A.esc(o.title || "") + '</td>' +
