@@ -22,6 +22,8 @@ window.SiteLogsTab = (function () {
     bound = true;
 
     document.getElementById("slgDate").value = A.todayISO();
+    A.populateMonthSelect(document.getElementById("slgMonthFilter"), 24);
+    document.getElementById("slgMonthFilter").addEventListener("change", render);
     document.getElementById("slgProjectFilter").addEventListener("change", render);
 
     document.getElementById("slgAddTodo").addEventListener("click", () => {
@@ -74,11 +76,15 @@ window.SiteLogsTab = (function () {
   async function render() {
     bindOnce();
     renderCrewChecklist();
+    const month = document.getElementById("slgMonthFilter").value;
     const projectId = document.getElementById("slgProjectFilter").value;
-    const list = await A.api("/site-logs" + (projectId ? "?projectId=" + projectId : ""));
+    const params = [];
+    if (month) params.push("month=" + month);
+    if (projectId) params.push("projectId=" + projectId);
+    const list = await A.api("/site-logs" + (params.length ? "?" + params.join("&") : ""));
     const host = document.getElementById("slgList");
     if (!list.length) {
-      host.innerHTML = '<div class="empty-state">No site logs yet. Log today\'s entry above.</div>';
+      host.innerHTML = '<div class="empty-state">No site logs for this month yet. Log today\'s entry above.</div>';
       return;
     }
     host.innerHTML = list.map((l) => logCardHtml(l)).join("");
