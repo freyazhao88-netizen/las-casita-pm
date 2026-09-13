@@ -5,20 +5,52 @@ const { entryCost } = require("../summary");
 
 const router = express.Router();
 
+// Group by a case/whitespace-insensitive key so "12152Chino" and "12152chino"
+// (typed on different forms, on different days) land in the same job.
+function normKey(name) {
+  return (name || "").trim().toLowerCase();
+}
+
+router.get("/small-jobs/:name/info", async (req, res, next) => {
+  try {
+    const key = normKey(req.params.name);
+    const infos = await db.all("smallJobInfo");
+    const info = infos.find((i) => i.nameKey === key);
+    res.json(info || { nameKey: key, contactName: "", phone: "", address: "", notes: "" });
+  } catch (e) { next(e); }
+});
+
+router.put("/small-jobs/:name/info", async (req, res, next) => {
+  try {
+    const key = normKey(req.params.name);
+    if (!key) return res.status(400).json({ error: "Job name is required" });
+    const { contactName, phone, address, notes } = req.body || {};
+    const infos = await db.all("smallJobInfo");
+    const existing = infos.find((i) => i.nameKey === key);
+    const patch = {
+      nameKey: key,
+      displayName: req.params.name.trim(),
+      contactName: contactName || "",
+      phone: phone || "",
+      address: address || "",
+      notes: notes || ""
+    };
+    const rec = existing ? await db.update("smallJobInfo", existing.id, patch) : await db.insert("smallJobInfo", patch);
+    res.json(rec);
+  } catch (e) { next(e); }
+});
+
 router.get("/small-jobs", async (req, res, next) => {
   try {
-    const [attendance, materials, expenses, payments] = await Promise.all([
+    const [attendance, materials, expenses, payments, infos] = await Promise.all([
       db.all("attendance"),
       db.all("materials"),
       db.all("expenses"),
-      db.all("payments")
+      db.all("payments"),
+      db.all("smallJobInfo")
     ]);
 
     const isAdhoc = (r) => !r.projectId && r.adhocProjectName;
-    // Group by a case/whitespace-insensitive key so "12152Chino" and "12152chino"
-    // (typed on different forms, on different days) land in the same job — but
-    // keep the first-seen spelling as the display name.
-    const normKey = (name) => (name || "").trim().toLowerCase();
     const jobs = {};
     const jobFor = (name) => {
       const key = normKey(name);
@@ -61,6 +93,7 @@ router.get("/small-jobs", async (req, res, next) => {
     const list = Object.values(jobs).map((j) => {
       const costTotal = j.laborTotal + j.materialsTotal + j.otherExpensesTotal;
       j.entries.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      const info = infos.find((i) => i.nameKey === normKey(j.name));
       return {
         name: j.name,
         laborTotal: j.laborTotal,
@@ -70,7 +103,11 @@ router.get("/small-jobs", async (req, res, next) => {
         amountReceived: j.amountReceived,
         profit: j.amountReceived - costTotal,
         lastActivity: j.lastActivity,
-        entries: j.entries
+        entries: j.entries,
+        contactName: info ? info.contactName : "",
+        phone: info ? info.phone : "",
+        address: info ? info.address : "",
+        notes: info ? info.notes : ""
       };
     });
     list.sort((a, b) => (b.lastActivity || "").localeCompare(a.lastActivity || ""));
