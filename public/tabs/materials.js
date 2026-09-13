@@ -159,7 +159,7 @@ window.MaterialsTab = (function () {
     } else {
       tbody.innerHTML = list.map((m) => (
         '<tr>' +
-          '<td>' + m.purchaseDate + '</td>' +
+          '<td>' + A.fmtDate(m.purchaseDate) + '</td>' +
           '<td>' + A.esc(A.projectNameOf(m)) + '</td>' +
           '<td>' + A.esc(m.vendor) + '</td>' +
           '<td>' + A.esc(m.category) + '</td>' +
@@ -212,7 +212,7 @@ window.MaterialsTab = (function () {
     } else {
       tbody.innerHTML = list.map((e) => (
         '<tr>' +
-          '<td>' + e.expenseDate + '</td>' +
+          '<td>' + A.fmtDate(e.expenseDate) + '</td>' +
           '<td>' + A.esc(A.projectNameOf(e)) + '</td>' +
           '<td>' + A.esc(e.category) + '</td>' +
           '<td>' + A.esc(e.description) + '</td>' +
