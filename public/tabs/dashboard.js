@@ -73,11 +73,11 @@ window.DashboardTab = (function () {
     const matTotal = unpaidMaterials.reduce((s, m) => s + (Number(m.amount) || 0), 0);
     const expTotal = unpaidExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
     const matRows = unpaidMaterials.slice().sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate)).map((m) => (
-      '<tr><td>' + m.purchaseDate + '</td><td>' + A.esc(A.projectNameOf(m)) + '</td><td>' + A.esc(m.vendor) + '</td>' +
+      '<tr><td>' + A.fmtDate(m.purchaseDate) + '</td><td>' + A.esc(A.projectNameOf(m)) + '</td><td>' + A.esc(m.vendor) + '</td>' +
       '<td>' + A.esc(m.category) + '</td><td class="amt num">' + A.fmtMoney(m.amount) + '</td></tr>'
     )).join("") || '<tr><td colspan="5" style="color:var(--muted);">No unpaid materials.</td></tr>';
     const expRows = unpaidExpenses.slice().sort((a, b) => b.expenseDate.localeCompare(a.expenseDate)).map((e) => (
-      '<tr><td>' + e.expenseDate + '</td><td>' + A.esc(A.projectNameOf(e)) + '</td><td>' + A.esc(e.category) + '</td>' +
+      '<tr><td>' + A.fmtDate(e.expenseDate) + '</td><td>' + A.esc(A.projectNameOf(e)) + '</td><td>' + A.esc(e.category) + '</td>' +
       '<td>' + A.esc(e.description) + '</td><td class="amt num">' + A.fmtMoney(e.amount) + '</td></tr>'
     )).join("") || '<tr><td colspan="5" style="color:var(--muted);">No unreimbursed expenses.</td></tr>';
 
@@ -204,8 +204,8 @@ window.DashboardTab = (function () {
   }
 
   function monthLabelOf(month) {
-    const [y, m] = month.split("-").map(Number);
-    return new Date(y, m - 1, 1).toLocaleDateString("en-US", { year: "numeric", month: "short" });
+    const [y, m] = month.split("-");
+    return m + "/" + y;
   }
 
   function tile(label, value, tone, icon, note, noteTone, dataDetail) {
