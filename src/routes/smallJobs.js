@@ -16,7 +16,7 @@ router.get("/small-jobs/:name/info", async (req, res, next) => {
     const key = normKey(req.params.name);
     const infos = await db.all("smallJobInfo");
     const info = infos.find((i) => i.nameKey === key);
-    res.json(info || { nameKey: key, contactName: "", phone: "", address: "", notes: "" });
+    res.json(info || { nameKey: key, clientName: "", managerName: "", phone: "", address: "", notes: "" });
   } catch (e) { next(e); }
 });
 
@@ -24,13 +24,14 @@ router.put("/small-jobs/:name/info", async (req, res, next) => {
   try {
     const key = normKey(req.params.name);
     if (!key) return res.status(400).json({ error: "Job name is required" });
-    const { contactName, phone, address, notes } = req.body || {};
+    const { clientName, managerName, phone, address, notes } = req.body || {};
     const infos = await db.all("smallJobInfo");
     const existing = infos.find((i) => i.nameKey === key);
     const patch = {
       nameKey: key,
       displayName: req.params.name.trim(),
-      contactName: contactName || "",
+      clientName: clientName || "",
+      managerName: managerName || "",
       phone: phone || "",
       address: address || "",
       notes: notes || ""
@@ -104,7 +105,8 @@ router.get("/small-jobs", async (req, res, next) => {
         profit: j.amountReceived - costTotal,
         lastActivity: j.lastActivity,
         entries: j.entries,
-        contactName: info ? info.contactName : "",
+        clientName: info ? info.clientName : "",
+        managerName: info ? info.managerName : "",
         phone: info ? info.phone : "",
         address: info ? info.address : "",
         notes: info ? info.notes : ""
