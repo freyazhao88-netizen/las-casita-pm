@@ -10,6 +10,39 @@ function cleanTodos(todos) {
     : [];
 }
 
+function cleanCrewIds(crewEmployeeIds) {
+  return Array.isArray(crewEmployeeIds) ? crewEmployeeIds.map(Number).filter((n) => Number.isFinite(n)) : [];
+}
+
+function crewNameText(employees, crewEmployeeIds) {
+  return crewEmployeeIds
+    .map((id) => { const e = employees.find((x) => x.id === id); return e ? e.name : null; })
+    .filter(Boolean)
+    .join(", ");
+}
+
+// Fills in that day's attendance for each crew member — defaults to a full day at
+// their current rate. Never overwrites or removes an existing entry, so a manual
+// correction (half day, different rate) made afterward is always preserved.
+async function syncAttendanceForCrew(projectId, logDate, crewEmployeeIds, employees) {
+  if (!crewEmployeeIds.length) return;
+  const attendance = await db.all("attendance");
+  for (const employeeId of crewEmployeeIds) {
+    const exists = attendance.some((a) => a.employeeId === employeeId && a.projectId === projectId && a.workDate === logDate);
+    if (exists) continue;
+    const emp = employees.find((e) => e.id === employeeId);
+    if (!emp) continue;
+    await db.insert("attendance", {
+      employeeId,
+      projectId,
+      workDate: logDate,
+      days: 1,
+      rate: Number(emp.defaultDailyRate) || 0,
+      notes: "Auto-logged from site log"
+    });
+  }
+}
+
 router.get("/site-logs", async (req, res, next) => {
   try {
     const { projectId, month } = req.query;
@@ -42,17 +75,21 @@ router.get("/site-logs/open-todos", async (req, res, next) => {
 
 router.post("/site-logs", async (req, res, next) => {
   try {
-    const { projectId, logDate, weather, crew, notes, todos } = req.body || {};
+    const { projectId, logDate, weather, crewEmployeeIds, notes, todos } = req.body || {};
     if (!projectId || !logDate) return res.status(400).json({ error: "projectId and logDate are required" });
     if (!(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
+    const crewIds = cleanCrewIds(crewEmployeeIds);
+    const employees = await db.all("employees");
     const rec = await db.insert("siteLogs", {
       projectId: Number(projectId),
       logDate,
       weather: weather || "",
-      crew: crew || "",
+      crew: crewNameText(employees, crewIds),
+      crewEmployeeIds: crewIds,
       notes: notes || "",
       todos: cleanTodos(todos)
     });
+    await syncAttendanceForCrew(Number(projectId), logDate, crewIds, employees);
     res.status(201).json(rec);
   } catch (e) { next(e); }
 });
@@ -62,12 +99,24 @@ router.put("/site-logs/:id", async (req, res, next) => {
     const rec = await db.find("siteLogs", req.params.id);
     if (!rec) return res.status(404).json({ error: "Not found" });
     const patch = {};
-    ["logDate", "weather", "crew", "notes"].forEach((k) => {
+    ["logDate", "weather", "notes"].forEach((k) => {
       if (k in req.body) patch[k] = req.body[k];
     });
     if ("projectId" in req.body) patch.projectId = Number(req.body.projectId);
     if ("todos" in req.body) patch.todos = cleanTodos(req.body.todos);
-    res.json(await db.update("siteLogs", req.params.id, patch));
+
+    let crewIds = null;
+    let employees = null;
+    if ("crewEmployeeIds" in req.body) {
+      crewIds = cleanCrewIds(req.body.crewEmployeeIds);
+      employees = await db.all("employees");
+      patch.crewEmployeeIds = crewIds;
+      patch.crew = crewNameText(employees, crewIds);
+    }
+
+    const updated = await db.update("siteLogs", req.params.id, patch);
+    if (crewIds) await syncAttendanceForCrew(updated.projectId, updated.logDate, crewIds, employees);
+    res.json(updated);
   } catch (e) { next(e); }
 });
 
