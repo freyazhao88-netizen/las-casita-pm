@@ -93,18 +93,27 @@ window.DashboardTab = (function () {
     )).join("") || '<tr><td colspan="4" style="color:var(--muted);">No unpaid labor subcontracts.</td></tr>';
 
     const html =
-      '<p style="margin:0 0 14px;font-size:13px;">Total owed: <strong class="num">' + A.fmtMoney(total) + '</strong></p>' +
-      '<h4 style="margin:0 0 8px;font-size:13px;">Unpaid materials — ' + A.fmtMoney(matTotal) + '</h4>' +
-      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Project</th><th>Vendor</th><th>Category</th><th>Amount</th></tr></thead>' +
-      '<tbody>' + matRows + '</tbody></table></div>' +
-      '<h4 style="margin:18px 0 8px;font-size:13px;">Unreimbursed other expenses — ' + A.fmtMoney(expTotal) + '</h4>' +
-      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>' +
-      '<tbody>' + expRows + '</tbody></table></div>' +
-      '<h4 style="margin:18px 0 8px;font-size:13px;">Unpaid labor subcontracts — ' + A.fmtMoney(subTotal) + '</h4>' +
-      '<div class="table-wrap"><table class="data-table"><thead><tr><th>Start</th><th>Project</th><th>Description</th><th>Amount</th></tr></thead>' +
-      '<tbody>' + subRows + '</tbody></table></div>';
+      '<p style="margin:0 0 16px;font-size:13px;">Total owed: <strong class="num">' + A.fmtMoney(total) + '</strong></p>' +
+      payableSection("var(--accent)", "Unpaid materials 未付材料款", matTotal,
+        '<th>Date</th><th>Project</th><th>Vendor</th><th>Category</th><th>Amount</th>', matRows) +
+      payableSection("var(--accent-warm)", "Unreimbursed other expenses 未报销花费", expTotal,
+        '<th>Date</th><th>Project</th><th>Category</th><th>Description</th><th>Amount</th>', expRows) +
+      payableSection("var(--bad)", "Unpaid labor subcontracts 未付人工总包", subTotal,
+        '<th>Start</th><th>Project</th><th>Description</th><th>Amount</th>', subRows);
 
     A.showDetailModal("应付款明细 Payables breakdown", html);
+  }
+
+  function payableSection(color, title, sectionTotal, theadHtml, rowsHtml) {
+    return (
+      '<div style="border-left:4px solid ' + color + ';padding:2px 0 2px 14px;margin-bottom:16px;">' +
+        '<h4 style="margin:0 0 8px;font-size:13px;color:' + color + ';display:flex;justify-content:space-between;">' +
+          '<span>' + title + '</span><span>' + A.fmtMoney(sectionTotal) + '</span>' +
+        '</h4>' +
+        '<div class="table-wrap"><table class="data-table"><thead><tr>' + theadHtml + '</tr></thead>' +
+        '<tbody>' + rowsHtml + '</tbody></table></div>' +
+      '</div>'
+    );
   }
 
   function showReceivablesDetail(projects, total) {
@@ -259,10 +268,11 @@ window.DashboardTab = (function () {
       const dayLabel = overdue
         ? Math.round((today - end) / 86400000) + " day" + (Math.round((today - end) / 86400000) === 1 ? "" : "s") + " past est. completion"
         : "Day " + Math.max(0, elapsedDays) + " of " + totalDays;
+      const barColor = overdue ? "var(--bad)" : pct >= 80 ? "var(--accent-warm)" : pct >= 50 ? "var(--accent)" : "var(--good)";
 
       return '<div class="proj-card" data-open-project="' + p.id + '">' + header +
-        '<div class="progress-bar" style="margin-top:10px;"><div class="fill" style="width:' + pct + '%;' + (overdue ? "background:var(--bad);" : "") + '"></div></div>' +
-        '<div class="row"><span class="k" style="' + (overdue ? "color:var(--bad);" : "") + '">' + A.esc(dayLabel) + '</span><span class="v">' + pct + '%</span></div>' +
+        '<div class="progress-bar" style="margin-top:10px;"><div class="fill" style="width:' + pct + '%;background:' + barColor + ';"></div></div>' +
+        '<div class="row"><span class="k" style="color:' + barColor + ';">' + A.esc(dayLabel) + '</span><span class="v">' + pct + '%</span></div>' +
       '</div>';
     }).join("");
     host.querySelectorAll("[data-open-project]").forEach((card) => {
