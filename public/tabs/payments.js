@@ -9,6 +9,8 @@ window.PaymentsTab = (function () {
     bound = true;
 
     document.getElementById("payDate").value = A.todayISO();
+    A.populateMonthSelect(document.getElementById("payMonthFilter"), 24, true);
+    document.getElementById("payMonthFilter").addEventListener("change", render);
     document.getElementById("payProjectFilter").addEventListener("change", render);
 
     document.getElementById("payForm").addEventListener("submit", async (e) => {
@@ -62,8 +64,12 @@ window.PaymentsTab = (function () {
   }
 
   async function renderClientPayments() {
+    const month = document.getElementById("payMonthFilter").value;
     const projectId = document.getElementById("payProjectFilter").value;
-    const list = await A.api("/payments" + (projectId ? "?projectId=" + projectId : ""));
+    const params = [];
+    if (month) params.push("month=" + month);
+    if (projectId) params.push("projectId=" + projectId);
+    const list = await A.api("/payments" + (params.length ? "?" + params.join("&") : ""));
     const tbody = document.querySelector("#payTable tbody");
     if (!list.length) {
       tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No payments logged yet.</td></tr>';
