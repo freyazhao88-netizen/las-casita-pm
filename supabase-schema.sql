@@ -280,3 +280,5 @@ create table if not exists labor_subcontracts (
 );
 create index if not exists idx_labor_subcontracts_project on labor_subcontracts(project_id);
 alter table labor_subcontracts disable row level security;
+
+alter table labor_subcontracts add column if not exists payment_status text not null default 'unpaid';
