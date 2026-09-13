@@ -24,16 +24,17 @@ router.get("/attendance", async (req, res, next) => {
 
 router.post("/attendance", async (req, res, next) => {
   try {
-    const { employeeId, projectId, adhocProjectName, workDate, days, rate, notes } = req.body || {};
-    if (!employeeId || !workDate) {
-      return res.status(400).json({ error: "employeeId and workDate are required" });
-    }
+    const { employeeId, adhocEmployeeName, projectId, adhocProjectName, workDate, days, rate, notes } = req.body || {};
+    if (!workDate) return res.status(400).json({ error: "workDate is required" });
+    const cleanAdhocEmployee = (adhocEmployeeName || "").trim();
+    if (!employeeId && !cleanAdhocEmployee) return res.status(400).json({ error: "Pick an employee or type a one-off helper's name" });
     const cleanAdhoc = (adhocProjectName || "").trim();
     if (!projectId && !cleanAdhoc) return res.status(400).json({ error: "Pick a project or type a one-off job name" });
-    if (!(await db.find("employees", employeeId))) return res.status(400).json({ error: "Unknown employee" });
+    if (employeeId && !(await db.find("employees", employeeId))) return res.status(400).json({ error: "Unknown employee" });
     if (projectId && !(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
     const rec = await db.insert("attendance", {
-      employeeId: Number(employeeId),
+      employeeId: employeeId ? Number(employeeId) : null,
+      adhocEmployeeName: employeeId ? "" : cleanAdhocEmployee,
       projectId: projectId ? Number(projectId) : null,
       adhocProjectName: projectId ? "" : cleanAdhoc,
       workDate,
@@ -50,7 +51,8 @@ router.put("/attendance/:id", async (req, res, next) => {
     const rec = await db.find("attendance", req.params.id);
     if (!rec) return res.status(404).json({ error: "Not found" });
     const patch = {};
-    if ("employeeId" in req.body) patch.employeeId = Number(req.body.employeeId);
+    if ("employeeId" in req.body) patch.employeeId = req.body.employeeId ? Number(req.body.employeeId) : null;
+    if ("adhocEmployeeName" in req.body) patch.adhocEmployeeName = req.body.adhocEmployeeName;
     if ("projectId" in req.body) patch.projectId = req.body.projectId ? Number(req.body.projectId) : null;
     if ("adhocProjectName" in req.body) patch.adhocProjectName = req.body.adhocProjectName;
     if ("workDate" in req.body) patch.workDate = req.body.workDate;
@@ -85,32 +87,33 @@ router.get("/attendance/summary", async (req, res, next) => {
     const byEmployee = {};
 
     entries.forEach((a) => {
-      if (!byEmployee[a.employeeId]) {
-        const emp = employees.find((e) => e.id === a.employeeId);
-        byEmployee[a.employeeId] = {
-          employeeId: a.employeeId,
-          employeeName: emp ? emp.name : "Unknown",
+      const empKey = a.employeeId || ("adhoc:" + (a.adhocEmployeeName || ""));
+      if (!byEmployee[empKey]) {
+        const emp = a.employeeId ? employees.find((e) => e.id === a.employeeId) : null;
+        byEmployee[empKey] = {
+          employeeId: a.employeeId || null,
+          employeeName: a.employeeId ? (emp ? emp.name : "Unknown") : (a.adhocEmployeeName || "One-off helper"),
           totalDays: 0,
           totalWage: 0,
           byProject: {}
         };
       }
-      const bucket = byEmployee[a.employeeId];
+      const bucket = byEmployee[empKey];
       const cost = entryCost(a);
       bucket.totalDays += Number(a.days) || 0;
       bucket.totalWage += cost;
-      const key = a.projectId || ("adhoc:" + (a.adhocProjectName || ""));
-      if (!bucket.byProject[key]) {
+      const projKey = a.projectId || ("adhoc:" + (a.adhocProjectName || ""));
+      if (!bucket.byProject[projKey]) {
         const proj = a.projectId ? projects.find((p) => p.id === a.projectId) : null;
-        bucket.byProject[key] = {
+        bucket.byProject[projKey] = {
           projectId: a.projectId || null,
           projectName: a.projectId ? (proj ? proj.name : "Unknown") : (a.adhocProjectName || "One-off job"),
           days: 0,
           wage: 0
         };
       }
-      bucket.byProject[key].days += Number(a.days) || 0;
-      bucket.byProject[key].wage += cost;
+      bucket.byProject[projKey].days += Number(a.days) || 0;
+      bucket.byProject[projKey].wage += cost;
     });
 
     const result = Object.values(byEmployee).map((b) => ({
