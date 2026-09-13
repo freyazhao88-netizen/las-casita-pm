@@ -8,6 +8,8 @@ window.ChangeOrdersTab = (function () {
   let companySettings = null;
   let order = null; // current editor state
   let bound = false;
+  let pendingOpenId = null;
+  let pendingNewForProject = null;
 
   function blankOrder() {
     return {
@@ -37,9 +39,21 @@ window.ChangeOrdersTab = (function () {
 
   async function render() {
     await ensureLibrary();
+    // btnSaveChangeOrder/btnBackToChangeOrders/etc. are static markup shared by both
+    // views, so bind them regardless of which branch below actually shows.
+    bindListButtons();
+    // Coming from a project's detail page ("open this change order" / "start a new one
+    // for this project") — jump straight to the editor instead of flashing the list first.
+    if (pendingOpenId !== null) {
+      const id = pendingOpenId; pendingOpenId = null;
+      return openEditor(id);
+    }
+    if (pendingNewForProject !== null) {
+      const projectId = pendingNewForProject; pendingNewForProject = null;
+      return startNewForProject(projectId);
+    }
     document.getElementById("coListView").hidden = false;
     document.getElementById("coEditorView").hidden = true;
-    bindListButtons();
 
     const projectId = document.getElementById("coProjectFilter").value;
     const status = document.getElementById("coStatusFilter").value;
@@ -94,6 +108,14 @@ window.ChangeOrdersTab = (function () {
       clientName: full.clientName || "", status: full.status || "pending",
       notes: full.notes || "", items: full.items || []
     };
+    openEditorView();
+  }
+
+  function startNewForProject(projectId) {
+    order = blankOrder();
+    order.projectId = projectId;
+    const proj = A.state.projects.find((p) => p.id === projectId);
+    if (proj) order.clientName = proj.clientName || "";
     openEditorView();
   }
 
@@ -321,5 +343,9 @@ window.ChangeOrdersTab = (function () {
     document.getElementById("coTopbarTotal").textContent = A.fmtMoney(total);
   }
 
-  return { render };
+  return {
+    render,
+    openOrder: (id) => { pendingOpenId = id; },
+    newOrderForProject: (projectId) => { pendingNewForProject = projectId; }
+  };
 })();
