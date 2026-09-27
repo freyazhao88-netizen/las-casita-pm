@@ -37,7 +37,7 @@ window.EmployeesTab = (function () {
     A.populateSelect(document.getElementById("wageEmployeeFilter"), list, (e) => e.id, (e) => e.name, "All employees");
     const tbody = document.querySelector("#empTable tbody");
     if (!list.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No employees yet.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No employees yet.</td></tr>';
       return;
     }
     tbody.innerHTML = list.map((emp) => (
@@ -48,13 +48,24 @@ window.EmployeesTab = (function () {
         '<td>' + maskedCell("idNumber", emp.idNumber) + '</td>' +
         '<td><input class="emp-notes" type="text" value="' + A.esc(emp.notes || "") + '" style="border:1px solid transparent;background:transparent;width:100%;"></td>' +
         '<td><input class="emp-active" type="checkbox" ' + (emp.active ? "checked" : "") + '></td>' +
+        '<td><button class="btn btn-sm emp-copy-link" type="button">复制链接 Copy</button></td>' +
         '<td><button class="row-del" title="Delete">✕</button></td>' +
       '</tr>'
     )).join("");
 
     tbody.querySelectorAll("tr[data-id]").forEach((row) => {
       const id = row.getAttribute("data-id");
+      const emp = list.find((e) => String(e.id) === id);
       const save = (patch) => A.api("/employees/" + id, { method: "PUT", body: patch }).then(() => A.loadCoreData());
+      row.querySelector(".emp-copy-link").addEventListener("click", async () => {
+        const url = location.origin + "/worker.html?t=" + emp.accessToken;
+        try {
+          await navigator.clipboard.writeText(url);
+          A.toast("链接已复制 Link copied — send it to " + emp.name);
+        } catch (e) {
+          prompt("Copy this link:", url);
+        }
+      });
       row.querySelector(".emp-name").addEventListener("change", (e) => save({ name: e.target.value }));
       row.querySelector(".emp-rate").addEventListener("change", (e) => save({ defaultDailyRate: e.target.value }));
       row.querySelector(".emp-notes").addEventListener("change", (e) => save({ notes: e.target.value }));
