@@ -1,12 +1,24 @@
 "use strict";
 const express = require("express");
+const crypto = require("crypto");
 const db = require("../db");
 
 const router = express.Router();
 
+function newAccessToken() {
+  return crypto.randomBytes(16).toString("hex");
+}
+
 router.get("/employees", async (req, res, next) => {
   try {
-    const list = (await db.all("employees")).sort((a, b) => a.name.localeCompare(b.name));
+    let list = await db.all("employees");
+    // Backfills a token for any employee created before the worker-portal feature existed.
+    const missing = list.filter((e) => !e.accessToken);
+    if (missing.length) {
+      await Promise.all(missing.map((e) => db.update("employees", e.id, { accessToken: newAccessToken() })));
+      list = await db.all("employees");
+    }
+    list.sort((a, b) => a.name.localeCompare(b.name));
     res.json(list);
   } catch (e) { next(e); }
 });
@@ -21,7 +33,8 @@ router.post("/employees", async (req, res, next) => {
       active: true,
       notes: notes || "",
       ssn: ssn || "",
-      idNumber: idNumber || ""
+      idNumber: idNumber || "",
+      accessToken: newAccessToken()
     });
     res.status(201).json(rec);
   } catch (e) { next(e); }
@@ -39,6 +52,14 @@ router.put("/employees/:id", async (req, res, next) => {
     if ("ssn" in req.body) patch.ssn = req.body.ssn;
     if ("idNumber" in req.body) patch.idNumber = req.body.idNumber;
     res.json(await db.update("employees", req.params.id, patch));
+  } catch (e) { next(e); }
+});
+
+router.post("/employees/:id/regenerate-token", async (req, res, next) => {
+  try {
+    const rec = await db.find("employees", req.params.id);
+    if (!rec) return res.status(404).json({ error: "Not found" });
+    res.json(await db.update("employees", req.params.id, { accessToken: newAccessToken() }));
   } catch (e) { next(e); }
 });
 
