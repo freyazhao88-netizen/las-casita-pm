@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Las Casita — Field Log</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+  body{ background:var(--paper); }
+  .field-app{ max-width:520px; margin:0 auto; padding:14px 14px 60px; }
+  .field-header{ display:flex; align-items:center; gap:12px; padding:10px 2px 18px; }
+  .field-header img{ height:34px; border-radius:4px; background:#fff; padding:3px 6px; flex:none; }
+  .field-header h1{ font-size:17px; margin:0; }
+  .field-header .sub-link{ font-size:11.5px; color:var(--muted); }
+  .field-header .sub-link a{ color:var(--accent); }
+  .field-header .btn{ margin-left:auto; }
+  .field-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:18px 16px; box-shadow:var(--shadow); margin-bottom:16px; }
+  .field-card h2{ font-size:15px; margin:0 0 14px; color:var(--accent); }
+  .field-card .field{ margin-bottom:14px; }
+  .field-card .field label{ font-size:12px; margin-bottom:6px; display:block; }
+  .field-card input[type=text], .field-card input[type=date], .field-card input[type=password]{
+    font-size:16px; padding:12px 12px; border:1px solid var(--line); border-radius:6px; width:100%;
+  }
+  .field-submit{ font-size:15px; padding:14px 16px; margin-top:4px; }
+  .fl-crew-cb-label{ display:inline-flex; align-items:center; gap:7px; border:1px dashed var(--line); background:var(--surface-2); padding:9px 13px; border-radius:99px; font-size:13.5px; margin:0 7px 7px 0; cursor:pointer; }
+  .fl-crew-cb-label input{ width:18px; height:18px; }
+  .fl-todo-row{ display:flex; gap:8px; }
+  .fl-todo-row input{ flex:1; }
+  .fl-todo-row button{ flex:none; }
+  .fl-todo-item{ display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  .fl-todo-item:last-child{ border-bottom:none; }
+  .fl-todo-item input[type=checkbox]{ width:20px; height:20px; margin-top:1px; flex:none; }
+  .fl-todo-item .meta{ display:block; font-size:11.5px; color:var(--muted); margin-top:2px; }
+  .fl-empty{ color:var(--muted); font-size:13px; padding:6px 0; }
+</style>
+</head>
+<body>
+
+<datalist id="flProjectOptions"></datalist>
+
+<div id="loginScreen" class="login-screen">
+  <form id="loginForm" class="login-card">
+    <div class="logo-plate logo-plate-lg">
+      <img src="/logo.jpg" alt="Las Casita Construction" class="logo-img logo-img-lg">
+    </div>
+    <p class="sub">Field Log 工地日志</p>
+    <input type="password" id="loginPassword" placeholder="Access password" autocomplete="current-password" required>
+    <button type="submit" class="btn btn-primary btn-block">Enter</button>
+    <p class="login-error" id="loginError" hidden></p>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <div class="field-app">
+    <div class="field-header">
+      <img src="/logo.jpg" alt="Las Casita">
+      <div>
+        <h1>工地日志 Field Log</h1>
+        <div class="sub-link"><a href="/">完整版 Full app →</a></div>
+      </div>
+      <button class="btn btn-sm btn-ghost" id="btnLogout" type="button">Log out</button>
+    </div>
+
+    <div class="field-card">
+      <h2>今日日志 Log today</h2>
+      <form id="flForm">
+        <div class="field"><label>Date 日期</label><input type="date" id="flDate" required></div>
+        <div class="field"><label>Project 项目</label><input type="text" id="flProject" list="flProjectOptions" placeholder="选择或输入项目名" required></div>
+        <div class="field"><label>Weather 天气</label><input type="text" id="flWeather" placeholder="e.g. Sunny 75°F"></div>
+        <div class="field">
+          <label>今天谁在场 Crew present</label>
+          <div id="flCrewChecklist"></div>
+        </div>
+        <div class="field"><label>备注 Notes</label><input type="text" id="flNotes" placeholder="今天有什么要记的"></div>
+        <div class="field">
+          <label>待办事项 To-do（可选）</label>
+          <div class="fl-todo-row" style="margin-bottom:8px;">
+            <input type="text" id="flTodoInput" placeholder="e.g. 买石膏板">
+            <button type="button" class="btn btn-sm" id="flAddTodo">+ 添加</button>
+          </div>
+          <div id="flTodoPending" class="chip-lib"></div>
+        </div>
+        <button class="btn btn-primary btn-block field-submit" type="submit">✓ 保存日志 Save log</button>
+      </form>
+    </div>
+
+    <div class="field-card">
+      <h2>待办事项 Open to-dos</h2>
+      <div id="flTodoList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="/field.js"></script>
+</body>
+</html>
