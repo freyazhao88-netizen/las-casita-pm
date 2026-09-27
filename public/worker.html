@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Las Casita — My Pay</title>
+<link rel="stylesheet" href="/styles.css">
+<style>
+  body{ background:var(--paper); }
+  .wk-app{ max-width:520px; margin:0 auto; padding:14px 14px 60px; }
+  .wk-header{ display:flex; align-items:center; gap:12px; padding:10px 2px 18px; }
+  .wk-header img{ height:34px; border-radius:4px; background:#fff; padding:3px 6px; flex:none; }
+  .wk-header h1{ font-size:17px; margin:0; }
+  .wk-header .sub{ font-size:11.5px; color:var(--muted); }
+  .wk-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:18px 16px; box-shadow:var(--shadow); margin-bottom:16px; }
+  .wk-card h2{ font-size:14px; margin:0 0 12px; color:var(--accent); }
+  .wk-balance{ text-align:center; padding:8px 0 4px; }
+  .wk-balance .amt{ font-size:32px; font-weight:700; }
+  .wk-balance .label{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .wk-stats{ display:flex; justify-content:space-around; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+  .wk-stats div{ text-align:center; }
+  .wk-stats .v{ font-size:16px; font-weight:700; }
+  .wk-stats .k{ font-size:11px; color:var(--muted); }
+  .wk-row{ display:flex; justify-content:space-between; align-items:baseline; padding:9px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .wk-row:last-child{ border-bottom:none; }
+  .wk-row .meta{ display:block; font-size:11.5px; color:var(--muted); margin-top:2px; }
+  .wk-row .amt{ font-weight:600; white-space:nowrap; }
+  .wk-empty{ color:var(--muted); font-size:13px; padding:6px 0; }
+  .wk-error{ text-align:center; padding:60px 20px; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<div id="wkError" class="wk-error" hidden>链接无效或已失效 Invalid link. 请联系公司获取新链接 / Contact the office for a new link.</div>
+
+<div id="app" class="wk-app" hidden>
+  <div class="wk-header">
+    <img src="/logo.jpg" alt="Las Casita">
+    <div>
+      <h1 id="wkName">—</h1>
+      <div class="sub">我的工资 My Pay — Las Casita Inc.</div>
+    </div>
+  </div>
+
+  <div class="wk-card">
+    <div class="wk-balance">
+      <div class="amt" id="wkBalance">$0</div>
+      <div class="label">目前结余 Balance owed to you</div>
+    </div>
+    <div class="wk-stats">
+      <div><div class="v" id="wkOwed">$0</div><div class="k">累计应得 Total earned</div></div>
+      <div><div class="v" id="wkPaid">$0</div><div class="k">累计已付 Total paid</div></div>
+    </div>
+  </div>
+
+  <div class="wk-card">
+    <h2>出勤记录 Attendance</h2>
+    <div id="wkAttendance"></div>
+  </div>
+
+  <div class="wk-card">
+    <h2>工资付款记录 Payments received</h2>
+    <div id="wkPayments"></div>
+  </div>
+</div>
+
+<script src="/worker.js"></script>
+</body>
+</html>
