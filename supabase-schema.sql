@@ -303,3 +303,9 @@ alter table small_jobs disable row level security;
 
 alter table small_jobs rename column contact_name to client_name;
 alter table small_jobs add column if not exists manager_name text default '';
+
+-- Worker read-only portal: each employee gets an unguessable token instead of the
+-- shared office password, so /api/worker/:token can show only that one worker's own
+-- attendance and wage-payment history — never anyone else's. The app backfills a
+-- token automatically for any employee that doesn't have one yet.
+alter table employees add column if not exists access_token text unique;
