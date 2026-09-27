@@ -22,6 +22,7 @@ const siteLogRoutes = require("./src/routes/siteLogs");
 const warrantyRoutes = require("./src/routes/warranties");
 const smallJobRoutes = require("./src/routes/smallJobs");
 const laborSubcontractRoutes = require("./src/routes/laborSubcontracts");
+const workerRoutes = require("./src/routes/worker");
 const db = require("./src/db");
 
 const app = express();
@@ -54,6 +55,8 @@ app.use(session({
 
 // Public auth endpoints (no login required)
 app.use("/api", authRoutes);
+// Public worker portal — its own unguessable per-employee token stands in for login
+app.use("/api", workerRoutes);
 
 // Everything else under /api requires login
 app.use("/api", (req, res, next) => {
