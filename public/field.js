@@ -3,6 +3,7 @@
   let employees = [];
   let projects = [];
   let pendingTodos = [];
+  let pendingCasual = [];
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => (
@@ -80,7 +81,10 @@
   function renderCrewChecklist() {
     const host = document.getElementById("flCrewChecklist");
     host.innerHTML = employees.map((e) => (
-      '<label class="fl-crew-cb-label"><input type="checkbox" class="fl-crew-cb" value="' + e.id + '">' + esc(e.name) + '</label>'
+      '<label class="fl-crew-cb-label"><input type="checkbox" class="fl-crew-cb" value="' + e.id + '">' + esc(e.name) +
+        '<select class="fl-days" data-emp="' + e.id + '">' +
+          '<option value="1">全天</option><option value="0.5">半天</option>' +
+        '</select></label>'
     )).join("");
   }
 
@@ -93,6 +97,19 @@
       btn.addEventListener("click", () => {
         pendingTodos.splice(Number(btn.getAttribute("data-idx")), 1);
         renderPendingTodos();
+      });
+    });
+  }
+
+  function renderPendingCasual() {
+    const host = document.getElementById("flCasualPending");
+    host.innerHTML = pendingCasual.map((n, i) => (
+      '<span class="chip todo-chip">' + esc(n) + ' <button type="button" data-idx="' + i + '">✕</button></span>'
+    )).join("");
+    host.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        pendingCasual.splice(Number(btn.getAttribute("data-idx")), 1);
+        renderPendingCasual();
       });
     });
   }
@@ -156,26 +173,46 @@
     if (e.key === "Enter") { e.preventDefault(); document.getElementById("flAddTodo").click(); }
   });
 
+  document.getElementById("flAddCasual").addEventListener("click", () => {
+    const input = document.getElementById("flCasualInput");
+    const name = input.value.trim();
+    if (!name) return;
+    if (!pendingCasual.some((n) => n.toLowerCase() === name.toLowerCase())) pendingCasual.push(name);
+    input.value = "";
+    renderPendingCasual();
+  });
+  document.getElementById("flCasualInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); document.getElementById("flAddCasual").click(); }
+  });
+
   document.getElementById("flForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const crewEmployeeIds = [...document.querySelectorAll(".fl-crew-cb:checked")].map((cb) => Number(cb.value));
     const projectInput = resolveProjectInput(document.getElementById("flProject").value);
     if (!projectInput.projectId && !projectInput.adhocProjectName) { toast("请选择或输入项目"); return; }
+    const typedCasual = document.getElementById("flCasualInput").value.trim();
+    if (typedCasual && !pendingCasual.some((n) => n.toLowerCase() === typedCasual.toLowerCase())) pendingCasual.push(typedCasual);
     const body = Object.assign({
+      casualCrew: pendingCasual,
       logDate: document.getElementById("flDate").value,
       weather: document.getElementById("flWeather").value,
       crewEmployeeIds,
+      crewDays: Object.fromEntries(crewEmployeeIds.map((id) => [id, Number(document.querySelector('.fl-days[data-emp="' + id + '"]').value)])),
       notes: document.getElementById("flNotes").value,
       todos: pendingTodos.map((t) => ({ text: t, done: false }))
     }, projectInput);
-    await api("/site-logs", { method: "POST", body });
+    const saved = await api("/site-logs", { method: "POST", body });
     document.getElementById("flProject").value = "";
     document.getElementById("flWeather").value = "";
     document.getElementById("flNotes").value = "";
     document.querySelectorAll(".fl-crew-cb:checked").forEach((cb) => { cb.checked = false; });
+    document.querySelectorAll(".fl-days").forEach((sel) => { sel.value = "1"; });
     pendingTodos = [];
     renderPendingTodos();
-    toast("日志已保存 Log saved");
+    pendingCasual = [];
+    document.getElementById("flCasualInput").value = "";
+    renderPendingCasual();
+    toast(saved.warnings && saved.warnings.length ? "⚠ " + saved.warnings.join("；") : "日志已保存 Log saved");
     renderTodos();
   });
 
