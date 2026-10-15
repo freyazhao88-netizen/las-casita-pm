@@ -14,9 +14,36 @@ function cleanCrewIds(crewEmployeeIds) {
   return Array.isArray(crewEmployeeIds) ? crewEmployeeIds.map(Number).filter((n) => Number.isFinite(n)) : [];
 }
 
-function crewNameText(employees, crewEmployeeIds) {
+function cleanCasualCrew(names) {
+  if (!Array.isArray(names)) return [];
+  const seen = new Set();
+  return names.map((n) => String(n || "").trim()).filter((n) => {
+    const key = n.toLowerCase();
+    if (!n || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// { employeeId: days } for each crew member — 1 (full day) unless a smaller share of
+// the day was worked here (e.g. 0.5 when the worker split the day across two sites).
+function cleanCrewDays(crewDays, crewIds) {
+  const out = {};
+  crewIds.forEach((id) => {
+    const d = Number(crewDays && crewDays[id]);
+    out[id] = d > 0 && d <= 1 ? d : 1;
+  });
+  return out;
+}
+
+function crewNameText(employees, crewEmployeeIds, crewDays) {
   return crewEmployeeIds
-    .map((id) => { const e = employees.find((x) => x.id === id); return e ? e.name : null; })
+    .map((id) => {
+      const e = employees.find((x) => x.id === id);
+      if (!e) return null;
+      const d = crewDays && crewDays[id];
+      return d && d < 1 ? e.name + " (" + d + "d)" : e.name;
+    })
     .filter(Boolean)
     .join(", ");
 }
@@ -24,8 +51,8 @@ function crewNameText(employees, crewEmployeeIds) {
 // Fills in that day's attendance for each crew member — defaults to a full day at
 // their current rate. Never overwrites or removes an existing entry, so a manual
 // correction (half day, different rate) made afterward is always preserved.
-async function syncAttendanceForCrew(projectId, adhocProjectName, logDate, crewEmployeeIds, employees) {
-  if (!crewEmployeeIds.length) return;
+async function syncAttendanceForCrew(projectId, adhocProjectName, logDate, crewEmployeeIds, employees, crewDays) {
+  if (!crewEmployeeIds.length) return [];
   const attendance = await db.all("attendance");
   for (const employeeId of crewEmployeeIds) {
     const exists = attendance.some((a) => a.employeeId === employeeId && a.workDate === logDate &&
@@ -38,11 +65,24 @@ async function syncAttendanceForCrew(projectId, adhocProjectName, logDate, crewE
       projectId,
       adhocProjectName: projectId ? "" : adhocProjectName,
       workDate: logDate,
-      days: 1,
+      days: (crewDays && crewDays[employeeId]) || 1,
       rate: Number(emp.defaultDailyRate) || 0,
       notes: "Auto-logged from site log"
     });
   }
+
+  // Warn when a worker's total across all sites that day adds up to more than one day.
+  const after = await db.all("attendance");
+  const warnings = [];
+  for (const employeeId of crewEmployeeIds) {
+    const total = after.filter((a) => a.employeeId === employeeId && a.workDate === logDate)
+      .reduce((sum, a) => sum + (Number(a.days) || 0), 0);
+    if (total > 1.0001) {
+      const emp = employees.find((e) => e.id === employeeId);
+      warnings.push((emp ? emp.name : "Worker") + " 当天合计 " + total + " 天（超过 1 天，请确认）");
+    }
+  }
+  return warnings;
 }
 
 router.get("/site-logs", async (req, res, next) => {
@@ -77,25 +117,28 @@ router.get("/site-logs/open-todos", async (req, res, next) => {
 
 router.post("/site-logs", async (req, res, next) => {
   try {
-    const { projectId, adhocProjectName, logDate, weather, crewEmployeeIds, notes, todos } = req.body || {};
+    const { projectId, adhocProjectName, logDate, weather, crewEmployeeIds, crewDays, casualCrew, notes, todos } = req.body || {};
     if (!logDate) return res.status(400).json({ error: "logDate is required" });
     const cleanAdhoc = (adhocProjectName || "").trim();
     if (!projectId && !cleanAdhoc) return res.status(400).json({ error: "Pick a project or type a one-off job name" });
     if (projectId && !(await db.find("projects", projectId))) return res.status(400).json({ error: "Unknown project" });
     const crewIds = cleanCrewIds(crewEmployeeIds);
+    const days = cleanCrewDays(crewDays, crewIds);
     const employees = await db.all("employees");
     const rec = await db.insert("siteLogs", {
       projectId: projectId ? Number(projectId) : null,
       adhocProjectName: projectId ? "" : cleanAdhoc,
       logDate,
       weather: weather || "",
-      crew: crewNameText(employees, crewIds),
+      crew: crewNameText(employees, crewIds, days),
       crewEmployeeIds: crewIds,
+      crewDays: days,
+      casualCrew: cleanCasualCrew(casualCrew),
       notes: notes || "",
       todos: cleanTodos(todos)
     });
-    await syncAttendanceForCrew(rec.projectId, rec.adhocProjectName, logDate, crewIds, employees);
-    res.status(201).json(rec);
+    const warnings = await syncAttendanceForCrew(rec.projectId, rec.adhocProjectName, logDate, crewIds, employees, days);
+    res.status(201).json({ ...rec, warnings });
   } catch (e) { next(e); }
 });
 
@@ -110,19 +153,23 @@ router.put("/site-logs/:id", async (req, res, next) => {
     if ("projectId" in req.body) patch.projectId = req.body.projectId ? Number(req.body.projectId) : null;
     if ("adhocProjectName" in req.body) patch.adhocProjectName = req.body.adhocProjectName;
     if ("todos" in req.body) patch.todos = cleanTodos(req.body.todos);
+    if ("casualCrew" in req.body) patch.casualCrew = cleanCasualCrew(req.body.casualCrew);
 
     let crewIds = null;
     let employees = null;
     if ("crewEmployeeIds" in req.body) {
       crewIds = cleanCrewIds(req.body.crewEmployeeIds);
       employees = await db.all("employees");
+      const days = cleanCrewDays(req.body.crewDays, crewIds);
       patch.crewEmployeeIds = crewIds;
-      patch.crew = crewNameText(employees, crewIds);
+      patch.crewDays = days;
+      patch.crew = crewNameText(employees, crewIds, days);
     }
 
     const updated = await db.update("siteLogs", req.params.id, patch);
-    if (crewIds) await syncAttendanceForCrew(updated.projectId, updated.adhocProjectName, updated.logDate, crewIds, employees);
-    res.json(updated);
+    let warnings = [];
+    if (crewIds) warnings = await syncAttendanceForCrew(updated.projectId, updated.adhocProjectName, updated.logDate, crewIds, employees, patch.crewDays);
+    res.json({ ...updated, warnings });
   } catch (e) { next(e); }
 });
 
