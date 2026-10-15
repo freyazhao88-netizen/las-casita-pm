@@ -87,7 +87,7 @@ window.SiteLogsTab = (function () {
       document.getElementById("slgWeather").value = "";
       document.getElementById("slgNotes").value = "";
       document.querySelectorAll(".slg-crew-cb:checked").forEach((cb) => { cb.checked = false; });
-      document.querySelectorAll(".slg-days").forEach((sel) => { sel.value = "1"; });
+      document.querySelectorAll(".slg-days").forEach((sel) => { sel.value = "1"; sel.style.display = "none"; });
       pendingTodos = [];
       renderPendingTodos();
       pendingCasual = [];
@@ -108,11 +108,18 @@ window.SiteLogsTab = (function () {
       '<label class="chip" style="cursor:pointer;display:inline-flex;align-items:center;">' +
         '<input type="checkbox" class="slg-crew-cb" value="' + e.id + '" style="margin-right:6px;"' + (checkedIds.has(String(e.id)) ? " checked" : "") + '>' +
         A.esc(e.name) +
-        '<select class="slg-days" data-emp="' + e.id + '" style="margin-left:6px;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;background:var(--surface);">' +
+        '<select class="slg-days" data-emp="' + e.id + '" style="' + (checkedIds.has(String(e.id)) ? "" : "display:none;") + 'margin-left:6px;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;background:var(--surface);">' +
           ["1", "0.5"].map((v) => '<option value="' + v + '"' + ((daysById[e.id] || "1") === v ? " selected" : "") + '>' + (v === "1" ? "全天" : "半天") + '</option>').join("") +
         '</select>' +
       '</label>'
     )).join("");
+    host.querySelectorAll(".slg-crew-cb").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const sel = host.querySelector('.slg-days[data-emp="' + cb.value + '"]');
+        sel.style.display = cb.checked ? "" : "none";
+        if (!cb.checked) sel.value = "1";
+      });
+    });
   }
 
   async function render() {
