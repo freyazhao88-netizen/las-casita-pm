@@ -309,3 +309,11 @@ alter table small_jobs add column if not exists manager_name text default '';
 -- attendance and wage-payment history — never anyone else's. The app backfills a
 -- token automatically for any employee that doesn't have one yet.
 alter table employees add column if not exists access_token text unique;
+
+-- Casual (non-employee) workers named directly on a site log's crew — names only; their
+-- pay is still entered in the Casual labor log, so no attendance row is auto-created.
+alter table site_logs add column if not exists casual_crew jsonb not null default '[]'::jsonb;
+
+-- Per-worker share of the day on a site log ({"<employeeId>": 1 | 0.5 | ...}) so a worker
+-- split across two sites isn't counted as two full days.
+alter table site_logs add column if not exists crew_days jsonb not null default '{}'::jsonb;
