@@ -23,7 +23,8 @@
   }
   .field-submit{ font-size:15px; padding:14px 16px; margin-top:4px; }
   .fl-crew-cb-label{ display:inline-flex; align-items:center; gap:7px; border:1px dashed var(--line); background:var(--surface-2); padding:9px 13px; border-radius:99px; font-size:13.5px; margin:0 7px 7px 0; cursor:pointer; }
-  .fl-crew-cb-label input{ width:18px; height:18px; }
+  .fl-crew-cb-label input[type=checkbox]{ width:18px; height:18px; }
+  .fl-days{ font-size:13px; padding:3px 4px; border:1px solid var(--line); border-radius:6px; background:var(--surface); }
   .fl-todo-row{ display:flex; gap:8px; }
   .fl-todo-row input{ flex:1; }
   .fl-todo-row button{ flex:none; }
@@ -68,8 +69,16 @@
         <div class="field"><label>Project 项目</label><input type="text" id="flProject" list="flProjectOptions" placeholder="选择或输入项目名" required></div>
         <div class="field"><label>Weather 天气</label><input type="text" id="flWeather" placeholder="e.g. Sunny 75°F"></div>
         <div class="field">
-          <label>今天谁在场 Crew present</label>
+          <label>今天谁在场 Crew present（一天分在几个工地的，选半天）</label>
           <div id="flCrewChecklist"></div>
+        </div>
+        <div class="field">
+          <label>临时工 Casual workers（不在名单里的，打名字添加）</label>
+          <div class="fl-todo-row" style="margin-bottom:8px;">
+            <input type="text" id="flCasualInput" placeholder="e.g. 王师傅">
+            <button type="button" class="btn btn-sm" id="flAddCasual">+ 添加</button>
+          </div>
+          <div id="flCasualPending" class="chip-lib"></div>
         </div>
         <div class="field"><label>备注 Notes</label><input type="text" id="flNotes" placeholder="今天有什么要记的"></div>
         <div class="field">
