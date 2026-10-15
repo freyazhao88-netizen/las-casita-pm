@@ -82,10 +82,17 @@
     const host = document.getElementById("flCrewChecklist");
     host.innerHTML = employees.map((e) => (
       '<label class="fl-crew-cb-label"><input type="checkbox" class="fl-crew-cb" value="' + e.id + '">' + esc(e.name) +
-        '<select class="fl-days" data-emp="' + e.id + '">' +
+        '<select class="fl-days" data-emp="' + e.id + '" hidden>' +
           '<option value="1">全天</option><option value="0.5">半天</option>' +
         '</select></label>'
     )).join("");
+    host.querySelectorAll(".fl-crew-cb").forEach((cb) => {
+      cb.addEventListener("change", () => {
+        const sel = host.querySelector('.fl-days[data-emp="' + cb.value + '"]');
+        sel.hidden = !cb.checked;
+        if (!cb.checked) sel.value = "1";
+      });
+    });
   }
 
   function renderPendingTodos() {
@@ -206,7 +213,7 @@
     document.getElementById("flWeather").value = "";
     document.getElementById("flNotes").value = "";
     document.querySelectorAll(".fl-crew-cb:checked").forEach((cb) => { cb.checked = false; });
-    document.querySelectorAll(".fl-days").forEach((sel) => { sel.value = "1"; });
+    document.querySelectorAll(".fl-days").forEach((sel) => { sel.value = "1"; sel.hidden = true; });
     pendingTodos = [];
     renderPendingTodos();
     pendingCasual = [];
