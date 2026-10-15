@@ -3,6 +3,7 @@ window.SiteLogsTab = (function () {
   const A = window.App;
   let bound = false;
   let pendingTodos = [];
+  let pendingCasual = [];
   const expandedDates = new Set();
   let initializedExpand = false;
 
@@ -15,6 +16,19 @@ window.SiteLogsTab = (function () {
       btn.addEventListener("click", () => {
         pendingTodos.splice(Number(btn.getAttribute("data-idx")), 1);
         renderPendingTodos();
+      });
+    });
+  }
+
+  function renderPendingCasual() {
+    const host = document.getElementById("slgCasualPending");
+    host.innerHTML = pendingCasual.map((n, i) => (
+      '<span class="chip todo-chip">' + A.esc(n) + ' <button type="button" data-idx="' + i + '">✕</button></span>'
+    )).join("");
+    host.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        pendingCasual.splice(Number(btn.getAttribute("data-idx")), 1);
+        renderPendingCasual();
       });
     });
   }
@@ -40,26 +54,46 @@ window.SiteLogsTab = (function () {
       if (e.key === "Enter") { e.preventDefault(); document.getElementById("slgAddTodo").click(); }
     });
 
+    document.getElementById("slgAddCasual").addEventListener("click", () => {
+      const input = document.getElementById("slgCasualInput");
+      const name = input.value.trim();
+      if (!name) return;
+      if (!pendingCasual.some((n) => n.toLowerCase() === name.toLowerCase())) pendingCasual.push(name);
+      input.value = "";
+      renderPendingCasual();
+    });
+    document.getElementById("slgCasualInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); document.getElementById("slgAddCasual").click(); }
+    });
+
     document.getElementById("slgForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const crewEmployeeIds = [...document.querySelectorAll(".slg-crew-cb:checked")].map((cb) => Number(cb.value));
       const projectInput = A.resolveProjectInput(document.getElementById("slgProject").value);
       if (!projectInput.projectId && !projectInput.adhocProjectName) { A.toast("Pick or type a project"); return; }
+      const typedCasual = document.getElementById("slgCasualInput").value.trim();
+      if (typedCasual && !pendingCasual.some((n) => n.toLowerCase() === typedCasual.toLowerCase())) pendingCasual.push(typedCasual);
       const body = Object.assign({
+        casualCrew: pendingCasual,
         logDate: document.getElementById("slgDate").value,
         weather: document.getElementById("slgWeather").value,
         crewEmployeeIds,
+        crewDays: Object.fromEntries(crewEmployeeIds.map((id) => [id, Number(document.querySelector('.slg-days[data-emp="' + id + '"]').value)])),
         notes: document.getElementById("slgNotes").value,
         todos: pendingTodos.map((t) => ({ text: t, done: false }))
       }, projectInput);
-      await A.api("/site-logs", { method: "POST", body });
+      const saved = await A.api("/site-logs", { method: "POST", body });
       document.getElementById("slgProject").value = "";
       document.getElementById("slgWeather").value = "";
       document.getElementById("slgNotes").value = "";
       document.querySelectorAll(".slg-crew-cb:checked").forEach((cb) => { cb.checked = false; });
+      document.querySelectorAll(".slg-days").forEach((sel) => { sel.value = "1"; });
       pendingTodos = [];
       renderPendingTodos();
-      A.toast("Log saved — crew's attendance added automatically");
+      pendingCasual = [];
+      document.getElementById("slgCasualInput").value = "";
+      renderPendingCasual();
+      A.toast(saved.warnings && saved.warnings.length ? "⚠ " + saved.warnings.join("；") : "Log saved — crew's attendance added automatically");
       render();
     });
   }
@@ -67,11 +101,16 @@ window.SiteLogsTab = (function () {
   function renderCrewChecklist() {
     const host = document.getElementById("slgCrewChecklist");
     const checkedIds = new Set([...document.querySelectorAll(".slg-crew-cb:checked")].map((cb) => cb.value));
+    const daysById = {};
+    document.querySelectorAll(".slg-days").forEach((sel) => { daysById[sel.getAttribute("data-emp")] = sel.value; });
     const employees = (A.state.employees || []).filter((e) => e.active);
     host.innerHTML = employees.map((e) => (
-      '<label class="chip" style="cursor:pointer;">' +
+      '<label class="chip" style="cursor:pointer;display:inline-flex;align-items:center;">' +
         '<input type="checkbox" class="slg-crew-cb" value="' + e.id + '" style="margin-right:6px;"' + (checkedIds.has(String(e.id)) ? " checked" : "") + '>' +
         A.esc(e.name) +
+        '<select class="slg-days" data-emp="' + e.id + '" style="margin-left:6px;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;background:var(--surface);">' +
+          ["1", "0.5"].map((v) => '<option value="' + v + '"' + ((daysById[e.id] || "1") === v ? " selected" : "") + '>' + (v === "1" ? "全天" : "半天") + '</option>').join("") +
+        '</select>' +
       '</label>'
     )).join("");
   }
@@ -161,8 +200,12 @@ window.SiteLogsTab = (function () {
     return map;
   }
 
-  function projectGroupHtml(logs, casualNames) {
+  function projectGroupHtml(logs, attendanceCasual) {
     const crew = mergedCrew(logs);
+    const casualNames = (attendanceCasual || []).slice();
+    logs.forEach((l) => (l.casualCrew || []).forEach((n) => {
+      if (!casualNames.some((x) => x.toLowerCase() === n.toLowerCase())) casualNames.push(n);
+    }));
     const weather = (logs.find((l) => l.weather) || {}).weather || "";
     const notesHtml = logs.filter((l) => l.notes).map((l) => (
       '<p style="font-size:12.5px;color:var(--ink);margin:8px 0 0;">' + A.esc(l.notes) + '</p>'
